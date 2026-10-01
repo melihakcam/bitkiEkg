@@ -1,0 +1,31 @@
+# Proje genel ayarları
+seed: 42
+
+paths:
+  raw: data/raw
+  interim: data/interim
+  processed: data/processed
+  figures: results/figures
+  tables: results/tables
+  models: models
+
+# Veri setleri (Zenodo kayıtları)
+datasets:
+  domates_su_stresi:
+    zenodo_id: 18876513
+    doi: 10.5281/zenodo.18876513
+    aciklama: "Early Detection of Water Stress by Plant Electrophysiology (Buss vd., 2026) - domates, 16 bitki, 10 Hz"
+  sarmasik_dis_ortam:
+    zenodo_id: 15095523
+    doi: 10.5281/zenodo.15095523
+    aciklama: "When Plants Respond (Buss vd., 2025) - sarmaşık, 5 ay dış ortam"
+  uyaran_siniflandirma:
+    zenodo_id: 7126105
+    doi: 10.5281/zenodo.7126105
+    aciklama: "Stimulus classification with electrical potential and impedance (Buss vd., 2023)"
+
+# Değerlendirme
+evaluation:
+  split: plant_group_kfold   # bitki bazlı bölme
+  n_splits: 4
+  metrics: [accuracy, f1, roc_auc]

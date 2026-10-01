@@ -1,0 +1,5 @@
+# Derin öğrenme bağımlılıkları (transfer öğrenme aşamasında kurulacak)
+# Yerelde GPU yok; ağır eğitimler Colab/Kaggle üzerinde yapılır.
+torch>=2.2
+transformers>=4.40
+huggingface_hub>=0.23
