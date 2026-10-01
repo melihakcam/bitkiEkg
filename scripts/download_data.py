@@ -60,10 +60,15 @@ class HttpRangeFile(io.RawIOBase):
     büyük bir zip'in içindekiler birkaç MB indirilerek listelenebilir.
     """
 
-    def __init__(self, url: str, size: int, session: requests.Session | None = None):
+    PIECE = 256 * 1024  # yavaş bağlantıda zaman aşımını önlemek için parça boyutu
+    RETRIES = 5
+
+    def __init__(self, url: str, size: int, session: requests.Session | None = None,
+                 max_bytes: int = 50 * 1024 * 1024):
         self.url, self.size, self.pos = url, size, 0
         self.session = session or requests.Session()
         self.bytes_fetched = 0
+        self.max_bytes = max_bytes  # yanlışlıkla büyük indirme yapılmasın diye üst sınır
 
     def readable(self) -> bool:
         return True
@@ -93,11 +98,24 @@ class HttpRangeFile(io.RawIOBase):
         return len(data)
 
     def _fetch(self, start: int, end: int) -> bytes:
-        r = self.session.get(self.url, headers={"Range": f"bytes={start}-{end}"}, timeout=TIMEOUT)
-        if r.status_code != 206:
-            raise RuntimeError(f"Sunucu Range isteğini desteklemiyor (HTTP {r.status_code})")
-        self.bytes_fetched += len(r.content)
-        return r.content
+        if self.bytes_fetched + (end - start + 1) > self.max_bytes:
+            raise RuntimeError(
+                f"Üst sınır aşılacak ({fmt_size(self.max_bytes)}); içerik listesi beklenenden büyük, durduruldu")
+        out = bytearray()
+        for a in range(start, end + 1, self.PIECE):
+            b = min(end, a + self.PIECE - 1)
+            for attempt in range(1, self.RETRIES + 1):
+                try:
+                    r = self.session.get(self.url, headers={"Range": f"bytes={a}-{b}"}, timeout=TIMEOUT)
+                    break
+                except requests.RequestException:
+                    if attempt == self.RETRIES:
+                        raise
+            if r.status_code != 206:
+                raise RuntimeError(f"Sunucu Range isteğini desteklemiyor (HTTP {r.status_code})")
+            out += r.content
+            self.bytes_fetched += len(r.content)
+        return bytes(out)
 
 
 def peek_zip(f: dict) -> None:
@@ -159,7 +177,16 @@ def extract(path: Path) -> None:
     dest = path.with_suffix("")
     print(f"  açılıyor: {path.name} -> {dest}")
     with zipfile.ZipFile(path) as zf:
-        zf.extractall(dest)
+        for info in zf.infolist():
+            # Windows dosya adında ':' kabul etmez (ör. P1_2024-07-05_11:43:23.csv); macOS artıkları atlanır
+            name = info.filename.replace(":", "-")
+            if info.is_dir() or name.startswith("__MACOSX/") or name.endswith(".DS_Store"):
+                continue
+            out = dest / name
+            out.parent.mkdir(parents=True, exist_ok=True)
+            with zf.open(info) as src, open(out, "wb") as dst:
+                while chunk := src.read(CHUNK):
+                    dst.write(chunk)
 
 
 def main() -> int:
