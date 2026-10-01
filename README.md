@@ -32,6 +32,8 @@ Veri dosyaları depoya eklenmez; `data/raw/` altına indirme betikleriyle indiri
 
 Metrikler: doğruluk, F1, ROC-AUC.
 
+İlerleme ve yapılacaklar: [`docs/yol_haritasi.md`](docs/yol_haritasi.md)
+
 ## Klasör yapısı
 
 ```
