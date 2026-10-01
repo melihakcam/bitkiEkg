@@ -153,7 +153,8 @@ def download(f: dict, out_dir: Path) -> Path:
 
 
 def extract(path: Path) -> None:
-    if not zipfile.is_zipfile(path):
+    # .xlsx/.docx de içten zip'tir; yalnızca .zip uzantılılar açılır
+    if path.suffix.lower() != ".zip" or not zipfile.is_zipfile(path):
         return
     dest = path.with_suffix("")
     print(f"  açılıyor: {path.name} -> {dest}")
