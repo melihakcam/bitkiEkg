@@ -29,3 +29,17 @@ Zip içerikleri `scripts/download_data.py --peek` ile, dosyalar indirilmeden inc
 - `SupplementaryCode.zip` (124 MB, açılmış 515 MB): **ham sinyal burada** —
   `datasets/train.tsv`, `test_stat.tsv`, `impedance_post.tsv`, `UzL/Temp/lrpi0_*.csv` …
 - `classification_results.xlsx`: sonuç tablosu (okumak için `openpyxl` gerekiyor).
+
+### İndirildikten sonra (SupplementaryCode)
+- `datasets/train.tsv`, `test_ANN.tsv` vb.: UCR formatı — 1. sütun etiket, ardından
+  **512 örneklik pencere**. Eğitim 1302, test 558 pencere.
+  Etiket dağılımı (eğitim): 0:381 · 1:353 · 2:381 · 3:92 · 4:95 (5 sınıf; 3 ve 4 azınlık,
+  muhtemelen mavi/kırmızı ışık — doğrulanacak). `*_stat.tsv`: 680 sütunluk öznitelik sürümü.
+- `datasets/UzL/{NoStimulus,Temp,Wind,BlueRedDatasets}/lrpi0_<zaman>.csv`: **ham ölçüm**,
+  ~2 sn aralıkla (≈0,5 Hz), dosya başına ~4500 satır (~2,5 saat).
+  Sütunlar: `differential_potential_CH1`, `differential_potential_CH2` (2 kanal bitki
+  potansiyeli), `temp-external`, `light-external`, `humidity-external`, `transpiration`,
+  `air_pressure`, **`soil_moisture`**, `soil_temperature`, `mag_X/Y/Z`, `RF_power_emission`.
+  Değerler ham ADC sayımı (ör. 510625) → mV dönüşümü cihaz koduna (`mu_interface`) bakılarak yapılacak.
+- `soil_moisture` sütunu önemli: aynı laboratuvarın (Buss/Hamann) cihazı domates verisinde de
+  kullanıldıysa su stresi etiketi toprak nemiyle doğrulanabilir.
