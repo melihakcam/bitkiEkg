@@ -15,6 +15,7 @@ import argparse
 import hashlib
 import io
 import sys
+import time
 import zipfile
 from pathlib import Path
 
@@ -26,6 +27,21 @@ from bitki_ekg.config import get_path, load_config
 ZENODO_API = "https://zenodo.org/api/records/{}"
 CHUNK = 1024 * 1024  # 1 MB
 TIMEOUT = 60
+MAX_RETRIES = 100  # bağlantı kopmalarında kaldığı yerden yeniden deneme sayısı
+
+
+def with_retries(fn, *args, what: str = "istek"):
+    """Ağ hatalarında artan beklemeyle (en fazla 60 sn) yeniden dener."""
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            return fn(*args)
+        except (requests.ConnectionError, requests.Timeout, requests.exceptions.ChunkedEncodingError) as e:
+            if attempt == MAX_RETRIES:
+                raise
+            wait = min(60, 5 * attempt)
+            print(f"\n  bağlantı hatası ({what}, deneme {attempt}): {type(e).__name__}; {wait} sn sonra devam",
+                  flush=True)
+            time.sleep(wait)
 
 
 def fmt_size(n: int) -> str:
@@ -37,7 +53,7 @@ def fmt_size(n: int) -> str:
 
 def record_files(zenodo_id: int) -> list[dict]:
     """Kayıttaki dosyaları [{name, size, md5, url}] olarak döndürür."""
-    r = requests.get(ZENODO_API.format(zenodo_id), timeout=TIMEOUT)
+    r = with_retries(lambda: requests.get(ZENODO_API.format(zenodo_id), timeout=TIMEOUT), what="kayıt bilgisi")
     r.raise_for_status()
     files = []
     for f in r.json()["files"]:
@@ -139,14 +155,11 @@ def md5sum(path: Path) -> str:
     return h.hexdigest()
 
 
-def download(f: dict, out_dir: Path) -> Path:
-    target = out_dir / f["name"]
-    if target.exists() and target.stat().st_size == f["size"]:
-        print(f"  zaten var: {target.name}")
-        return target
-
-    part = target.with_name(target.name + ".part")
+def _stream_to_part(f: dict, part: Path) -> None:
+    """`.part` dosyasında kalınan yerden sonuna kadar indirir; kopmada istisna fırlatır."""
     done = part.stat().st_size if part.exists() else 0
+    if done >= f["size"]:
+        return
     headers = {"Range": f"bytes={done}-"} if done else {}
 
     with requests.get(f["url"], headers=headers, stream=True, timeout=TIMEOUT) as r:
@@ -154,11 +167,21 @@ def download(f: dict, out_dir: Path) -> Path:
             done = 0
         r.raise_for_status()
         with open(part, "ab" if done else "wb") as fh, tqdm(
-            total=f["size"], initial=done, unit="B", unit_scale=True, desc=f["name"]
+            total=f["size"], initial=done, unit="B", unit_scale=True, desc=f["name"], mininterval=5
         ) as bar:
             for chunk in r.iter_content(CHUNK):
                 fh.write(chunk)
                 bar.update(len(chunk))
+
+
+def download(f: dict, out_dir: Path) -> Path:
+    target = out_dir / f["name"]
+    if target.exists() and target.stat().st_size == f["size"]:
+        print(f"  zaten var: {target.name}")
+        return target
+
+    part = target.with_name(target.name + ".part")
+    with_retries(_stream_to_part, f, part, what=f["name"])
 
     if part.stat().st_size != f["size"]:
         raise RuntimeError(f"{f['name']}: eksik indirme, komutu tekrar çalıştırın (kaldığı yerden devam eder)")
