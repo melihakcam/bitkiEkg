@@ -44,7 +44,17 @@ Her veri seti için aşağıdaki bilgiler raporlanacaktır.
 - Şekiller: ham sinyal örnekleri, sınıf bazlı ortalama sinyal, bitki bazlı dağılımlar [DOLDURULACAK]
 
 ### 3.2 Sarmaşık dış ortam
-- [DOLDURULACAK — aynı başlıklar + hava durumu verisiyle ilişki]
+- Ölçüm: PhytoNode cihazı, gümüş kaplı elektrotlar; gövde alt ucu ile 30–60 cm yukarısı
+  (gövde veya yaprak sapı) arasındaki potansiyel farkı (Buss vd., 2025)
+- Bitki sayısı / süre: 4 sarmaşık (P1, P2, P3, P5), 05.07–18.11.2024, Konstanz botanik bahçesi
+- Örnekleme: cihazda ~200 Hz, veri setinde 1 sn ortalama ile 1 Hz; 2 kanal (CH1, CH2)
+- Dosya yapısı: bitki başına 12 saatlik CSV parçaları (`datetime, CH1, CH2`), toplam 575 dosya
+- Veri kapsaması: P1 %59 · P2 %50 · P3 %59 · P5 %53 (donanım iletişim sorunları);
+  iki dosyada ~19 milyon boş satır var
+- Etiket: veri setinde hazır etiket yok; hava durumu verisinden (10 dk) eşikle türetiliyor.
+  **Su stresi etiketi yok** → veri setleri arası testte vekil etiket olarak yağmurlu/kuru
+  kullanılması planlanıyor
+- Sınıf dağılımı, pencere sayıları, şekiller: [DOLDURULACAK]
 
 ### 3.3 Uyaran sınıflandırma
 - [DOLDURULACAK]
@@ -67,7 +77,7 @@ Uygulanan adımların sonuçları (atılan pencere sayısı, son sınıf dağıl
 | Çalışma | Veri | Yöntem | Bölme | En iyi sonuç |
 |---|---|---|---|---|
 | Buss vd. (2026) | Domates su stresi | 1 dk–6 sa pencerelerden öznitelik + AutoML; derin öğrenme ile karşılaştırma | Görülmemiş bitkiler | %92'ye varan doğruluk; derin öğrenme AutoML'in gerisinde |
-| Buss vd. (2025) | Sarmaşık, dış ortam | 1 sa pencerelerden öznitelik; RF, NB, kNN, SVM, MLP | Rastgele pencere | RF ile makro F1 %95 |
+| Buss vd. (2025) | Sarmaşık, dış ortam (4 bitki, 5 ay) | 1 sa pencere, z-skor, 700+ tsfresh özniteliği, SMOTE; NB, kNN, doğrusal SVM, MLP, RF, AutoML. Etiketler hava durumundan eşikle: gündüz/gece, yağmurlu/kuru, soğuk/sıcak, rüzgârlı/sakin | Rastgele %80/%20 (bitki/zaman bazlı değil) | Ort. makro F1: RF %90,7, AutoML %89,6; en iyi yağmurlu/kuru RF + öznitelik seçimi %95,5. NB %31,9–63,4, kNN %49,1–69,4 |
 | Buss vd. (2023) | Domates, Zamioculcas uyaranları | Diskriminant analizi ve derin öğrenme karşılaştırması | [DOLDURULACAK] | [DOLDURULACAK] |
 | Chatterjee vd. (2015) | PLEASED | İstatistiksel öznitelik + diskriminant analizi | [DOLDURULACAK] | [DOLDURULACAK] |
 | Chatterjee vd. (2018) | PLEASED | Eğri uydurma katsayıları öznitelik olarak | [DOLDURULACAK] | [DOLDURULACAK] |

@@ -21,6 +21,54 @@ Zip içerikleri `scripts/download_data.py --peek` ile, dosyalar indirilmeden inc
 - ⚠️ **Doğrudan su stresi etiketi yok.** Veri setleri arası test için en yakın görev
   `rain_dry`; ya da yağış + buharlaşmadan bir "kuraklık" etiketi türetilebilir.
 
+### İndirildikten sonra (Plant_data)
+- Her CSV: `datetime, CH1, CH2`, 1 Hz, 12 saatlik parça (~43 200 satır). Değerler ham
+  cihaz sayımı (~8 milyon civarı).
+- ⚠️ `P1/P1_2024-08-10_12-00-00.csv` ve `P3/P3_2024-08-10_12-00-00.csv` ~400 MB:
+  2024-01-01'den başlayan ~19 milyon **boş satır** içeriyor (Zenodo'dan böyle geliyor).
+  Okurken boş satırlar atılmalı; Excel ile açılmamalı.
+- Veri kapsaması (1 dk çözünürlükte, ilk–son ölçüm arası):
+  P1 %59 (05.07–18.11) · P2 %50 (11.07–18.11) · P3 %59 (07.08–18.11) · P5 %53 (13.08–18.11).
+- Hava durumu: 10 dk aralık, 01.07–30.11.2024; gece yarısı "24:00:00" olarak yazılmış;
+  `Verdunstung Haude` (buharlaşma) %99 boş → kuraklık etiketi için kullanılamaz.
+
+### Makaleden (Buss, Aust & Hamann, 2025 — arXiv 2506.23872)
+- **Cihaz:** PhytoNode, gümüş kaplı elektrotlar. Bir elektrot gövdenin alt ucunda (toprağın
+  hemen üstü), diğeri 30–60 cm yukarıda gövdede veya bir yaprak sapında.
+- **Kanallar:** Makale sonuçları "STEM" (gövde) ve "LEAF" (yaprak) olarak ayrı veriyor;
+  CH1/CH2 ile eşleşmesi açıkça yazılmamış (muhtemelen bunlar).
+- **Örnekleme:** Cihaz ~200 Hz; yazarlar 1 sn ortalama ile 1 Hz'e indirmiş.
+- **Birim:** Ham değerin mV karşılığı verilmemiş; yazarlar z-skor kullanmış.
+- **Yer/süre:** Konstanz Üniversitesi botanik bahçesi, 05.07–18.11.2024, 4 sarmaşık
+  (P4'ün yokluğu açıklanmamış).
+- **Boşluklar:** Donanım iletişim sorunları; %80'den az dolu günler atılmış → 216 gün.
+- **Etiketler (yazarlara göre keyfi eşikler):**
+
+  | Görev | Kural |
+  |---|---|
+  | Gündüz / gece | Işınım > 50 W/m² → gündüz |
+  | Yağmurlu / kuru | Yağış > 0 mm |
+  | Soğuk / sıcak | 25 °C eşiği, yalnızca 08:00–20:00 |
+  | Rüzgârlı / sakin | 1,25 m/s eşiği, yalnızca 08:00–20:00 |
+
+- **Yöntem:** 1 sa pencere, z-skor, 700+ tsfresh özniteliği (min-max), SMOTE (k=5).
+  **Rastgele %80/%20 bölme** (+ eğitimin %20'si doğrulama), 10 tabakalı karıştırmalı bölme.
+  Bitki bazlı veya zaman bazlı bölme yok.
+- **Makro F1 (%), gövde:**
+
+  | Model | Rüzgârlı/sakin | Gündüz/gece | Yağmurlu/kuru | Soğuk/sıcak |
+  |---|---|---|---|---|
+  | Naive Bayes | 31,9 | 63,4 | 60,0 | 63,4 |
+  | kNN (k=5) | 49,1 | 69,4 | 53,7 | 59,3 |
+  | MLP | 80,5 | 82,1 | 88,5 | 82,4 |
+  | Doğrusal SVM | 73,8 | 79,6 | 84,9 | 77,3 |
+  | Random Forest (256 ağaç) | 87,9 | 92,8 | 93,8 | 88,5 |
+  | AutoML | 90,8 | 93,8 | 89,3 | 84,7 |
+
+  En iyi: yaprak, yağmurlu/kuru, RF + 49 öznitelik → **%95,5 ± 0,5**.
+- **Su stresi / toprak nemi / kuraklık makalede hiç geçmiyor.**
+- **Yazarların belirttiği kısıtlar:** yalnızca 4 bitki, tek mevsim ve konum, keyfi eşikler.
+
 ## Uyaran sınıflandırma (Zenodo 7126105)
 - `DeepClassifier.zip` (4,2 GB): **yalnızca yazarların eğittiği modeller ve sonuçları**
   (`.hdf5`, `history.csv`, `y_pred.npy`). Ham sinyal yok → **indirilmeyecek.**
