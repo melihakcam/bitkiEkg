@@ -4,6 +4,9 @@ data/interim/*
 data/processed/*
 !data/**/.gitkeep
 
+# Makale PDF'leri (telif nedeniyle depoya eklenmez)
+docs/makaleler/
+
 # Model ağırlıkları ve checkpoint'ler
 models/*
 !models/.gitkeep
