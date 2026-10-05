@@ -34,13 +34,14 @@ Son güncelleme: 2026-10-02
 - 🟡 Model girdi özellikleri: ECG-FM tam doğrulandı (500 Hz, 5 s, 12 derivasyon, z-skor);
   HuBERT-ECG kısmen (100 Hz, 12 derivasyon; segment süresi ve derivasyon dizilişi Colab'da koddan)
 
-## Aşama 3 — EDA (Faz 1 raporu) 🟡
-- 🟡 Yükleyiciler: `src/bitki_ekg/data.py` — sarmaşık bitki + hava durumu ✅; uyaran ⬜; domates ⬜
-- 🟡 Not defterleri: `01_sarmasik_ilk_bakis.ipynb` yazıldı (henüz çalıştırılmadı);
-  uyaran ⬜; domates ⬜
-- ⬜ Örnek/pencere sayıları, sınıf dağılımı, eksik veri, bitki bazlı dağılımlar
-- ⬜ Şekiller → `results/figures/`, tablolar → `results/tables/`
-- ⬜ Faz 1 raporundaki `[DOLDURULACAK]` alanları
+## Aşama 3 — EDA (Faz 1 raporu) ✅
+- ✅ Yükleyiciler: `src/bitki_ekg/data.py` — domates, sarmaşık, hava durumu
+- ✅ Domates: `scripts/eda_domates.py` (4 şekil + bitki özet tablosu)
+- ✅ Sarmaşık: `notebooks/01_sarmasik_ilk_bakis.ipynb` (4 şekil), `scripts/eda_sarmasik_etiket.py`
+  (makale eşikleriyle sınıf dağılımı)
+- ✅ Uyaran: `scripts/eda_uyaran.py` (3 şekil; etiket eşlemesi yazar kodundan doğrulandı;
+  ışık sınıflarında olası artefakt)
+- ✅ Faz 1 raporu dolduruldu (`reports/faz1/faz1_rapor.md`); ders şablonu gelince aktarılacak
 
 ## Aşama 4 — Ön işleme ⬜
 - ⬜ `src/bitki_ekg/preprocessing.py`: kalite süzgeci, detrend, pencereleme, yeniden örnekleme, z-skor
