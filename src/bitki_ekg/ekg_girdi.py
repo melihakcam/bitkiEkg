@@ -20,6 +20,11 @@ HUBERT_GIRDI = HUBERT_DERIVASYON * HUBERT_DERIVASYON_UZUNLUK  # 6 000
 
 KANAL_ESLEME = ("tekrar", "tek", "parca")
 
+# ECG-FM girdisi (bowang-lab/ECG-FM infer_quickstart.ipynb'den doğrulandı):
+# (B, 12, 2 500) = 12 derivasyon × 5 s × 500 Hz, derivasyon başına standartlaştırma.
+ECGFM_DERIVASYON = 12
+ECGFM_UZUNLUK = 2500
+
 
 def yeniden_ornekle(X: np.ndarray, hedef: int) -> np.ndarray:
     """(n, L) → (n, hedef); kenar yumuşatmalı polifaz yeniden örnekleme."""
@@ -48,3 +53,14 @@ def hubert_girdisi(Z: np.ndarray, esleme: str = "tekrar") -> np.ndarray:
     cikti = np.zeros((len(d), HUBERT_GIRDI), dtype=np.float32)
     cikti[:, HUBERT_DERIVASYON_UZUNLUK:2 * HUBERT_DERIVASYON_UZUNLUK] = d
     return cikti
+
+
+def ecgfm_girdisi(Z: np.ndarray) -> np.ndarray:
+    """Bitki pencerelerini (n, L) ECG-FM girdisine (n, 12, 2500) çevirir.
+
+    Pencere 2 500 örneğe yeniden örneklenir, z-skorla standartlaştırılır (ECG-FM'in
+    `Standardize` dönüşümüyle aynı) ve 12 derivasyona kopyalanır.
+    """
+    d = yeniden_ornekle(Z, ECGFM_UZUNLUK)
+    d = (d - d.mean(axis=1, keepdims=True)) / np.maximum(d.std(axis=1, keepdims=True), 1e-6)
+    return np.repeat(d[:, None, :], ECGFM_DERIVASYON, axis=1).astype(np.float32)

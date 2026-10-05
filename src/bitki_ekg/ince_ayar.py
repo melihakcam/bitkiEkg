@@ -1,4 +1,4 @@
-"""HuBERT-ECG ince ayarı: bitki-dışarıda-bırak (LOPO) değerlendirme.
+"""EKG temel modeli ince ayarı (HuBERT-ECG, ECG-FM): bitki-dışarıda-bırak (LOPO) değerlendirme.
 
 Tüm ayarlar deney başlamadan sabitlenmiştir (AYARLAR); test bitkisine bakılarak hiçbir seçim
 yapılmaz. Her LOPO katmanında eğitim bitkilerinden 2'si iç doğrulama için ayrılır ve en iyi
@@ -6,8 +6,13 @@ epoch iç doğrulama AUC'sine göre seçilir. Her katmanın sonucu ayrı bir JSO
 oturum koparsa tamamlanan katmanlar atlanarak kaldığı yerden devam edilir.
 
 Deneyler:
-  onceden_egitilmis   — HuBERT-ECG small ağırlıkları (EKG ön eğitimi)
+  onceden_egitilmis   — ön eğitimli ağırlıklar (EKG ön eğitimi)
   rastgele_baslatilmis — aynı mimari, rastgele ağırlıklar (kontrol)
+
+Modeller (`model_turu`):
+  hubert — HuBERT-ECG small (30,5 M); girdi (B, 6000)
+  ecgfm  — ECG-FM önceden eğitilmiş (90,9 M, wav2vec 2.0); girdi (B, 12, 2500);
+           `fairseq_signals` gerektirir (Colab'da kaynak koddan kurulur)
 """
 
 import json
@@ -23,6 +28,9 @@ from transformers import AutoConfig, AutoModel
 
 MODEL_ADI = "Edoardo-Coppola/hubert-ecg-small"
 MODEL_SURUM = "eca1c5af82da493a86a2bf0a89733234c9c3617d"
+ECGFM_ADI = "wanglab/ecg-fm"
+ECGFM_DOSYA = "mimic_iv_ecg_physionet_pretrained.pt"
+ECGFM_SURUM = "584219ea492cdeef2e19ffbdf9c6ecc874ba427e"
 
 
 @dataclass(frozen=True)
@@ -41,21 +49,60 @@ class Ayarlar:
 AYARLAR = Ayarlar()
 
 
+def ecgfm_yukle(onceden_egitilmis: bool, tohum: int) -> nn.Module:
+    """ECG-FM gövdesi. Rastgele kontrolde tüm ağırlıklar yeniden başlatılır.
+
+    `reset_parameters` 211/215 tensörü sıfırlar; konumsal konvolüsyonun ağırlık normu
+    parametreleri (original0/1) ayrıca başlatılır. Kalan `mask_emb` ve `quantizer.vars`
+    `features_only=True, mask=False` kullanımında devreye girmez.
+    """
+    from fairseq_signals.models import build_model_from_checkpoint
+    from huggingface_hub import hf_hub_download
+
+    ckpt = hf_hub_download(ECGFM_ADI, ECGFM_DOSYA, revision=ECGFM_SURUM)
+    govde = build_model_from_checkpoint(checkpoint_path=ckpt)
+    if not onceden_egitilmis:
+        torch.manual_seed(tohum)
+        for m in govde.modules():
+            if m is not govde and hasattr(m, "reset_parameters"):
+                m.reset_parameters()
+        konv = govde.conv_pos.pos_conv[0]
+        with torch.no_grad():
+            v = konv.parametrizations.weight.original1
+            k, c = konv.kernel_size[0], konv.in_channels
+            nn.init.normal_(v, mean=0.0, std=(4.0 / (k * c)) ** 0.5)  # fairseq wav2vec2 başlatması
+            konv.parametrizations.weight.original0.copy_(v.norm(p=2, dim=(0, 1), keepdim=True))
+    return govde
+
+
 class Siniflandirici(nn.Module):
-    def __init__(self, onceden_egitilmis: bool, ayar: Ayarlar = AYARLAR):
+    def __init__(self, onceden_egitilmis: bool, ayar: Ayarlar = AYARLAR, model_turu: str = "hubert"):
         super().__init__()
-        config = AutoConfig.from_pretrained(MODEL_ADI, revision=MODEL_SURUM, trust_remote_code=True)
-        config.mask_time_prob = ayar.mask_time_prob
-        if onceden_egitilmis:
-            self.govde = AutoModel.from_pretrained(MODEL_ADI, revision=MODEL_SURUM, config=config,
-                                                   trust_remote_code=True)
+        self.model_turu = model_turu
+        if model_turu == "hubert":
+            config = AutoConfig.from_pretrained(MODEL_ADI, revision=MODEL_SURUM, trust_remote_code=True)
+            config.mask_time_prob = ayar.mask_time_prob
+            if onceden_egitilmis:
+                self.govde = AutoModel.from_pretrained(MODEL_ADI, revision=MODEL_SURUM, config=config,
+                                                       trust_remote_code=True)
+            else:
+                self.govde = AutoModel.from_config(config, trust_remote_code=True)
+            self.govde.feature_extractor._freeze_parameters()  # CNN öznitelik çıkarıcı dondurulur
+            gizli = config.hidden_size
+        elif model_turu == "ecgfm":
+            self.govde = ecgfm_yukle(onceden_egitilmis, ayar.tohum)
+            for p in self.govde.feature_extractor.parameters():  # CNN öznitelik çıkarıcı dondurulur
+                p.requires_grad = False
+            gizli = 768
         else:
-            self.govde = AutoModel.from_config(config, trust_remote_code=True)
-        self.govde.feature_extractor._freeze_parameters()  # CNN öznitelik çıkarıcı dondurulur
-        self.bas = nn.Sequential(nn.Dropout(0.1), nn.Linear(config.hidden_size, 2))
+            raise ValueError(f"bilinmeyen model_turu: {model_turu}")
+        self.bas = nn.Sequential(nn.Dropout(0.1), nn.Linear(gizli, 2))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        h = self.govde(x).last_hidden_state  # (B, T, D)
+        if self.model_turu == "hubert":
+            h = self.govde(x).last_hidden_state  # (B, T, D)
+        else:
+            h = self.govde(source=x, mask=False, features_only=True)["x"]  # (B, T, 768)
         return self.bas(h.mean(dim=1))
 
 
@@ -83,7 +130,7 @@ def olc(y: np.ndarray, p: np.ndarray) -> dict:
 
 
 def katman_egit(X, y, gruplar, test_bitkisi: int, onceden_egitilmis: bool, cihaz: str,
-                ayar: Ayarlar = AYARLAR, sinir: int | None = None) -> dict:
+                ayar: Ayarlar = AYARLAR, sinir: int | None = None, model_turu: str = "hubert") -> dict:
     """Tek bir LOPO katmanı: eğit, iç doğrulamada en iyi epoch'u seç, test bitkisinde ölç.
 
     `sinir` yalnızca hızlı yerel test içindir (her kümeden ilk n pencere).
@@ -98,7 +145,7 @@ def katman_egit(X, y, gruplar, test_bitkisi: int, onceden_egitilmis: bool, cihaz
     if sinir:
         tr, va, te = (rng.permutation(i)[:sinir] for i in (tr, va, te))
 
-    model = Siniflandirici(onceden_egitilmis, ayar).to(cihaz)
+    model = Siniflandirici(onceden_egitilmis, ayar, model_turu).to(cihaz)
     opt = torch.optim.AdamW([
         {"params": [p for p in model.govde.parameters() if p.requires_grad], "lr": ayar.lr_govde},
         {"params": model.bas.parameters(), "lr": ayar.lr_bas},
@@ -137,13 +184,14 @@ def katman_egit(X, y, gruplar, test_bitkisi: int, onceden_egitilmis: bool, cihaz
 
     model.load_state_dict(en_iyi["durum"])
     test = olc(y[te], olasilik(model, X[te], cihaz))
-    return {"test_bitkisi": int(test_bitkisi), "onceden_egitilmis": onceden_egitilmis,
+    return {"model_turu": model_turu, "test_bitkisi": int(test_bitkisi), "onceden_egitilmis": onceden_egitilmis,
             "ic_dogrulama_bitkileri": sorted(int(b) for b in ic_dog), "en_iyi_epoch": en_iyi["epoch"],
             "n_egitim": int(len(tr)), "n_test": int(len(te)), **test, "gecmis": gecmis, "ayarlar": asdict(ayar)}
 
 
 def lopo_calistir(X, y, gruplar, onceden_egitilmis: bool, cikti: Path, cihaz: str,
-                  ayar: Ayarlar = AYARLAR, sinir: int | None = None, bitkiler=None) -> list[dict]:
+                  ayar: Ayarlar = AYARLAR, sinir: int | None = None, bitkiler=None,
+                  model_turu: str = "hubert") -> list[dict]:
     """Tüm LOPO katmanlarını çalıştırır; tamamlanmış katmanları (JSON varsa) atlar."""
     cikti.mkdir(parents=True, exist_ok=True)
     sonuclar = []
@@ -154,7 +202,7 @@ def lopo_calistir(X, y, gruplar, onceden_egitilmis: bool, cikti: Path, cihaz: st
             print(f"  bitki {g}: önceden tamamlanmış, atlandı", flush=True)
             continue
         t0 = time.time()
-        s = katman_egit(X, y, gruplar, int(g), onceden_egitilmis, cihaz, ayar, sinir)
+        s = katman_egit(X, y, gruplar, int(g), onceden_egitilmis, cihaz, ayar, sinir, model_turu)
         s["sure_sn"] = round(time.time() - t0, 1)
         dosya.write_text(json.dumps(s, ensure_ascii=False, indent=1), encoding="utf-8")
         sonuclar.append(s)
