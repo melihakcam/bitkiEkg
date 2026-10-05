@@ -1,5 +1,8 @@
-# Derin öğrenme bağımlılıkları (transfer öğrenme aşamasında kurulacak)
-# Yerelde GPU yok; ağır eğitimler Colab/Kaggle üzerinde yapılır.
-torch>=2.2
-transformers>=4.40
-huggingface_hub>=0.23
+# Derin öğrenme bağımlılıkları (EKG temel modelleri).
+# Yerelde CPU ile test edilen sürümler: torch 2.14.1+cpu, transformers 4.57.6.
+# Yerel CPU kurulumu:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+# Colab'da torch hazır gelir; yalnızca aşağıdakiler kurulur.
+transformers>=4.40,<5
+safetensors
+huggingface_hub
