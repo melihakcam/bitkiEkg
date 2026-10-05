@@ -2,7 +2,8 @@
 numpy>=1.24,<2.0
 pandas>=2.0
 scipy>=1.10
-pyarrow>=14.0
+# pyarrow bilinçli olarak yok: Windows Akıllı Uygulama Denetimi DLL'ini engelliyor ve
+# sklearn içe aktarımını bozuyor; projede parquet kullanılmıyor (npz/csv).
 
 # Görselleştirme
 matplotlib>=3.7
