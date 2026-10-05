@@ -89,6 +89,9 @@ def sarmasik_bitki(bitki: str, yeniden_ornekle: str | None = None) -> pd.DataFra
         parcalar.append(df)
     df = pd.concat(parcalar).sort_index()
     df = df[~df.index.duplicated(keep="first")]  # parça sınırlarındaki çakışan satırlar
+    if yeniden_ornekle:
+        # Dosyalar arası boşluklar NaN olsun; yoksa grafikler boşlukları düz çizgiyle birleştirir
+        df = df.asfreq(yeniden_ornekle)
     df.attrs["bitki"] = bitki
     return df
 
