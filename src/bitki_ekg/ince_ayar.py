@@ -76,7 +76,8 @@ def ecgfm_yukle(onceden_egitilmis: bool, tohum: int) -> nn.Module:
 
 
 class Siniflandirici(nn.Module):
-    def __init__(self, onceden_egitilmis: bool, ayar: Ayarlar = AYARLAR, model_turu: str = "hubert"):
+    def __init__(self, onceden_egitilmis: bool, ayar: Ayarlar = AYARLAR, model_turu: str = "hubert",
+                 govde_agirlik: str | Path | None = None):
         super().__init__()
         self.model_turu = model_turu
         if model_turu == "hubert":
@@ -87,6 +88,8 @@ class Siniflandirici(nn.Module):
                                                        trust_remote_code=True)
             else:
                 self.govde = AutoModel.from_config(config, trust_remote_code=True)
+            if govde_agirlik is not None:  # DAPT ile uyarlanmış gövde (dapt.py)
+                self.govde.load_state_dict(torch.load(govde_agirlik, map_location="cpu"))
             self.govde.feature_extractor._freeze_parameters()  # CNN öznitelik çıkarıcı dondurulur
             gizli = config.hidden_size
         elif model_turu == "ecgfm":
@@ -130,7 +133,8 @@ def olc(y: np.ndarray, p: np.ndarray) -> dict:
 
 
 def katman_egit(X, y, gruplar, test_bitkisi: int, onceden_egitilmis: bool, cihaz: str,
-                ayar: Ayarlar = AYARLAR, sinir: int | None = None, model_turu: str = "hubert") -> dict:
+                ayar: Ayarlar = AYARLAR, sinir: int | None = None, model_turu: str = "hubert",
+                govde_agirlik: str | Path | None = None) -> dict:
     """Tek bir LOPO katmanı: eğit, iç doğrulamada en iyi epoch'u seç, test bitkisinde ölç.
 
     `sinir` yalnızca hızlı yerel test içindir (her kümeden ilk n pencere).
@@ -145,7 +149,7 @@ def katman_egit(X, y, gruplar, test_bitkisi: int, onceden_egitilmis: bool, cihaz
     if sinir:
         tr, va, te = (rng.permutation(i)[:sinir] for i in (tr, va, te))
 
-    model = Siniflandirici(onceden_egitilmis, ayar, model_turu).to(cihaz)
+    model = Siniflandirici(onceden_egitilmis, ayar, model_turu, govde_agirlik).to(cihaz)
     opt = torch.optim.AdamW([
         {"params": [p for p in model.govde.parameters() if p.requires_grad], "lr": ayar.lr_govde},
         {"params": model.bas.parameters(), "lr": ayar.lr_bas},
@@ -191,7 +195,7 @@ def katman_egit(X, y, gruplar, test_bitkisi: int, onceden_egitilmis: bool, cihaz
 
 def lopo_calistir(X, y, gruplar, onceden_egitilmis: bool, cikti: Path, cihaz: str,
                   ayar: Ayarlar = AYARLAR, sinir: int | None = None, bitkiler=None,
-                  model_turu: str = "hubert") -> list[dict]:
+                  model_turu: str = "hubert", govde_agirlik: str | Path | None = None) -> list[dict]:
     """Tüm LOPO katmanlarını çalıştırır; tamamlanmış katmanları (JSON varsa) atlar."""
     cikti.mkdir(parents=True, exist_ok=True)
     sonuclar = []
@@ -202,7 +206,7 @@ def lopo_calistir(X, y, gruplar, onceden_egitilmis: bool, cikti: Path, cihaz: st
             print(f"  bitki {g}: önceden tamamlanmış, atlandı", flush=True)
             continue
         t0 = time.time()
-        s = katman_egit(X, y, gruplar, int(g), onceden_egitilmis, cihaz, ayar, sinir, model_turu)
+        s = katman_egit(X, y, gruplar, int(g), onceden_egitilmis, cihaz, ayar, sinir, model_turu, govde_agirlik)
         s["sure_sn"] = round(time.time() - t0, 1)
         dosya.write_text(json.dumps(s, ensure_ascii=False, indent=1), encoding="utf-8")
         sonuclar.append(s)

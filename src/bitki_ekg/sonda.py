@@ -29,6 +29,18 @@ def ecgfm_gomme(govde: torch.nn.Module, X: np.ndarray, cihaz: str, toplu: int = 
     return np.concatenate(parcalar)
 
 
+@torch.no_grad()
+def hubert_gomme(govde: torch.nn.Module, X: np.ndarray, cihaz: str, toplu: int = 32) -> np.ndarray:
+    """(n, 6000) → (n, 512): tüm katmanların zaman ortalamalarının ortalaması (scripts/olcek_taramasi.py ile aynı)."""
+    govde.eval().to(cihaz)
+    parcalar = []
+    for i in range(0, len(X), toplu):
+        cikis = govde(torch.from_numpy(X[i:i + toplu]).to(cihaz), output_hidden_states=True)
+        h = torch.stack([k.mean(dim=1) for k in cikis.hidden_states], dim=1).mean(dim=1)
+        parcalar.append(h.float().cpu().numpy())
+    return np.concatenate(parcalar)
+
+
 def sonda_degerlendir(E: np.ndarray, y: np.ndarray, gruplar: np.ndarray) -> pd.DataFrame:
     bolmeler = [("lopo", f"bitki {g}", tr, te) for g, tr, te in lopo_bolmeleri(gruplar)]
     tr, te = yazar_bolmesi(gruplar)
