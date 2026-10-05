@@ -29,8 +29,8 @@ Son güncelleme: 2026-10-02
   bölme, tüm sonuçlar → notlar ve Faz 1 raporu
 - ✅ Domates: yapı, 16 bitki / 8 cihaz, 1 Hz, sınıflar 0/1/3, yazarların sonuçları → notlar
 - ✅ Domates makalesi (Buss 2026) okundu: 4 sulama grubu, etiketler, 2 bitkilik test, tüm sonuçlar
-- ⬜ `classification_results.xlsx` → Buss 2023 satırındaki boşluklar
-- ⬜ Uyaran ve domates makalelerini okumak (Buss 2023, Buss 2026)
+- ✅ Buss 2023 makalesi okundu → Faz 1 literatür tablosu dolduruldu
+- ✅ Domates EDA ilk grafikleri (`scripts/eda_domates.py` → `results/figures/domates_*.png`)
 - 🟡 Model girdi özellikleri: ECG-FM tam doğrulandı (500 Hz, 5 s, 12 derivasyon, z-skor);
   HuBERT-ECG kısmen (100 Hz, 12 derivasyon; segment süresi ve derivasyon dizilişi Colab'da koddan)
 

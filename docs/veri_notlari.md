@@ -175,5 +175,16 @@ Meta sütunlar: `plant_id, node, day, datetime_start, datetime_end, class`.
   potansiyeli), `temp-external`, `light-external`, `humidity-external`, `transpiration`,
   `air_pressure`, **`soil_moisture`**, `soil_temperature`, `mag_X/Y/Z`, `RF_power_emission`.
   Değerler ham ADC sayımı (ör. 510625) → mV dönüşümü cihaz koduna (`mu_interface`) bakılarak yapılacak.
+### Makaleden (Buss vd., 2023 — Bioinspir. Biomim. 18:025003, açık erişim)
+- Elektrik potansiyeli: **Zamioculcas zamiifolia**, CYBRES phytosensor, ~0,58 Hz; uyaranlar
+  rüzgâr, ısı, mavi ve kırmızı ışık. Doku empedansı: 3 **domates**, ~0,08 Hz, yalnızca ışık.
+- Örnekler: uyaran başlangıcından itibaren 340 örnek (~9,8 dk), ön-uyaran dönemiyle arka plan
+  çıkarma; empedansta 295 örnek (~60 dk).
+- Bölme: **rastgele %70 eğitim / %30 test**, sınıf oranları korunarak (bitki/deney bazlı değil).
+- DA: 9 öznitelik (ortalama, varyans, çarpıklık, basıklık, IQR, Hjorth hareketlilik/karmaşıklık,
+  WPE, ASP) + SFS → 2 sınıf %100, 5 sınıf %99,1 (QDA), empedans 2 sınıf %100.
+- DL (5 tekrar ortalaması, test): 2 sınıf Inception 89,7 · ResNet 89,4 · FCN 89,3 · MLP 73,2;
+  3 sınıf Inception 92,2; 5 sınıf FCN/ResNet 83,5 · MLP 57,4.
+- `classification_results.xlsx`: bu sonuçların ham tabloları (DA-BioPot, DA-Imp, DL-2/3/5classes).
 - `soil_moisture` sütunu önemli: aynı laboratuvarın (Buss/Hamann) cihazı domates verisinde de
   kullanıldıysa su stresi etiketi toprak nemiyle doğrulanabilir.
