@@ -31,7 +31,8 @@ Son güncelleme: 2026-10-02
 - ✅ Domates makalesi (Buss 2026) okundu: 4 sulama grubu, etiketler, 2 bitkilik test, tüm sonuçlar
 - ⬜ `classification_results.xlsx` → Buss 2023 satırındaki boşluklar
 - ⬜ Uyaran ve domates makalelerini okumak (Buss 2023, Buss 2026)
-- ⬜ Model girdi özelliklerini doğrula (ECG-FM, HuBERT-ECG model kartları)
+- 🟡 Model girdi özellikleri: ECG-FM tam doğrulandı (500 Hz, 5 s, 12 derivasyon, z-skor);
+  HuBERT-ECG kısmen (100 Hz, 12 derivasyon; segment süresi ve derivasyon dizilişi Colab'da koddan)
 
 ## Aşama 3 — EDA (Faz 1 raporu) 🟡
 - 🟡 Yükleyiciler: `src/bitki_ekg/data.py` — sarmaşık bitki + hava durumu ✅; uyaran ⬜; domates ⬜

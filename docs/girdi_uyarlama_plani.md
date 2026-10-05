@@ -1,19 +1,29 @@
 # Bitki Sinyalini EKG Temel Modellerine Uyarlama Planı
 
-Bu belge projenin en kritik tasarım kararını tanımlar: 10 Hz örneklenen, dakikalar–saatler
+Bu belge projenin en kritik tasarım kararını tanımlar: 1 Hz örneklenen, dakikalar–saatler
 ölçeğinde değişen bitki elektrik potansiyeli, saniyeler ölçeğinde kalp atımı görmeye alışmış
 EKG modellerine nasıl verilecek?
 
-> ⚠️ **Doğrulanacak:** Aşağıdaki model girdi özellikleri yazarın bilgisine dayanır, internet
-> erişimi olmadan yazılmıştır. Ağırlıklar indirildiğinde model kartı ve kodundan teyit edilecek.
+> Model girdi özellikleri 2026-10-05'te doğrulandı (✅) ya da doğrulanamadı (❓); kaynaklar tablonun altında.
 
 ## 1. Uyuşmazlık
 
 | Özellik | Bitki sinyali (domates, Buss 2026) | ECG-FM | HuBERT-ECG |
 |---|---|---|---|
-| Örnekleme hızı | 10 Hz | 500 Hz *(doğrulanacak)* | 100 Hz *(doğrulanacak)* |
-| Girdi uzunluğu | Pencereye bağlı (1 dk = 600, 1 sa = 36 000 örnek) | 5 s → 2 500 örnek *(doğrulanacak)* | 5 s → 500 örnek/kanal *(doğrulanacak)* |
-| Kanal sayısı | Veri gelince belirlenecek | 12 derivasyon | 12 derivasyon |
+| Örnekleme hızı | Cihazda 10 Hz, veri setinde **1 Hz** | **500 Hz** ✅ (doğrusal interpolasyonla) | **100 Hz** ✅ |
+| Girdi uzunluğu | Pencereye bağlı (1 dk = 60, 30 dk = 1 800, 1 sa = 3 600 örnek) | **5 s → 2 500 örnek** ✅ | ≥3,75 s kayıtlar kullanılmış ✅; segment süresi ❓ (5 s → 500 örnek/derivasyon varsayımı) |
+| Kanal sayısı | **Bitki başına 1** (her PhytoNode kanalı ayrı bitki) | 12 derivasyon ✅ | 12 derivasyon ✅; tek derivasyonla da test edilmiş ✅; derivasyonların girdiye diziliş biçimi ❓ |
+| Normalizasyon | Robust z-skor (Buss 2026 DL) | z-skor ✅ | ❓ |
+| Mimari | — | wav2vec 2.0, 90,9 M parametre; 4 konv. blok (256 kanal, adım 2) + 12 transformer katmanı (768 boyut, 12 başlık) ✅ | HuBERT; small 30,5 M parametre ✅; base/large ❓ |
+| Yükleme | — | `fairseq_signals` gerekir, `transformers` ile **yüklenemez** ✅ | `transformers` `AutoModel.from_pretrained("Edoardo-Coppola/hubert-ecg-small", trust_remote_code=True)` ✅ |
+| Lisans | CC-BY | MIT | **CC BY-NC 4.0** (ticari olmayan; ders/makale için uygun) |
+
+Kaynaklar: ECG-FM — McKeen vd., arXiv 2408.05178 (HTML) ve github.com/bowang-lab/ECG-FM;
+HuBERT-ECG — huggingface.co/Edoardo-Coppola/hubert-ecg-small ve Coppola vd. (medRxiv 2024)
+özetleri. ❓ işaretliler model Colab'da yüklendiğinde koddan doğrulanacak.
+
+**Pratik sonuç:** HuBERT-ECG `transformers` ile tek satırda yüklendiği için transfer
+deneylerine onunla başlamak daha kolay. ECG-FM için `fairseq_signals` kurulumu gerekiyor.
 | İlgili olaylar | Yavaş kaymalar, dakikalar–saatler süren tepkiler | QRS ~0,1 s, kalp döngüsü ~1 s | Aynı |
 | Gürültü | Elektrot kayması, sulama/ışık döngüsü | Taban çizgisi kayması, kas gürültüsü | Aynı |
 
