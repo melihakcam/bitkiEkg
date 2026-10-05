@@ -1,0 +1,7 @@
+,,dogruluk,dogruluk,f1,f1,auc,auc
+,,mean,std,mean,std,mean,std
+pencere,grup,,,,,,
+1h,kontrol,0.637,0.206,0.584,0.366,0.65,0.272
+1h,sulama,0.729,0.113,0.695,0.15,0.807,0.154
+30min,kontrol,0.533,0.159,0.443,0.321,0.493,0.257
+30min,sulama,0.705,0.114,0.664,0.169,0.793,0.152
