@@ -6,6 +6,45 @@ import pandas as pd
 
 from bitki_ekg.config import get_path
 
+# --- Domates sulama stresi (Buss vd., 2026) ---------------------------------
+
+# Her PhytoNode cihazı iki bitkiyi ölçer: CH1 ve CH2 ayrı bitkilerdir.
+DOMATES_CIHAZLAR = ("PN2", "PN5", "PN8", "PN9", "PN10", "PN11", "PN12", "PN16")
+DOMATES_KONTROL = ("PN8", "PN9")  # 400 mL/gün kontrol grubu (bitki 4–7), hep sınıf 3
+
+
+def domates_klasoru() -> Path:
+    return get_path("raw") / "domates_su_stresi" / "AdditionalMaterial" / "Tomato_Zenodo"
+
+
+def domates_cihaz(cihaz: str, yeniden_ornekle: str | None = None) -> pd.DataFrame:
+    """Bir cihazın 18 günlük kaydını 1 saatlik pencere dosyalarından birleştirir.
+
+    Sütunlar: CH1, CH2 (mV, 1 Hz) — iki ayrı bitki. `yeniden_ornekle` (ör. "1min")
+    verilirse ortalama alınarak seyreltilir.
+    """
+    dosyalar = sorted((domates_klasoru() / "00_time_windows" / "Exp1" / "1h").glob(f"{cihaz}_*.csv"))
+    parcalar = []
+    for f in dosyalar:
+        df = pd.read_csv(f, parse_dates=["datetime"], index_col="datetime")
+        if yeniden_ornekle:
+            df = df.resample(yeniden_ornekle).mean()
+        parcalar.append(df)
+    df = pd.concat(parcalar).sort_index()
+    return df[~df.index.duplicated(keep="first")]
+
+
+def domates_etiketler(pencere: str = "1h") -> pd.DataFrame:
+    """Yazarların pencere etiketleri: plant_id, node, day, datetime_start/end, class.
+
+    class: 0 = sağlıklı (ilk 3 gün), 1 = stresli (son 3 gün), 3 = kullanılmayan
+    (ara günler ve kontrol bitkileri).
+    """
+    f = domates_klasoru() / "01_features" / "Exp1" / pencere / "features_with_class.csv"
+    return pd.read_csv(f, usecols=["plant_id", "node", "day", "datetime_start", "datetime_end", "class"],
+                       parse_dates=["datetime_start", "datetime_end"])
+
+
 # --- Sarmaşık dış ortam (Buss vd., 2025) ------------------------------------
 
 SARMASIK_BITKILER = ("P1", "P2", "P3", "P5")
