@@ -58,7 +58,43 @@ LOPO 80,7 ± 15,4 (1 sa), 79,3 ± 15,2 (30 dk) · yazar 94,6 / 91,9 · rastgele 
 - MiniRocket dönüşümü her bölmede yeniden hesaplanıyor ve çekirdeklerin hepsini kullanmıyor
   → `n_jobs=-1` ve dönüşüm önbelleği ile hızlandırılabilir.
 
-## 2. Zaman karıştırıcısı testi
+## 2. HuBERT-ECG doğrusal sonda (ön test, GPU'suz)
+
+`python scripts/hubert_sonda.py` → `hubert_sonda_katman.csv`, `hubert_sonda_ozet.csv`
+
+- Model: `Edoardo-Coppola/hubert-ecg-small` (30,5 M parametre), sürüm `eca1c5a…` sabit.
+- Girdi: robust z-skorlu pencere → 500 örneğe yeniden örnekleme → 12 derivasyona kopyalama
+  (6 000 örnek). Model **eğitilmez**; her katmanın zaman ortalaması gömme olarak alınır,
+  üstüne lojistik regresyon (StandardScaler + C=1).
+- Kontrol: aynı mimari, rastgele ağırlıklar. Gömme çıkarma CPU'da 87–333 s.
+
+### LOPO (12 bitki), ortalama ± std (%)
+| Pencere | Model | Özellik | Doğruluk | AUC |
+|---|---|---|---|---|
+| 1 sa | Önceden eğitilmiş | tüm katman ort. | 70,1 ± 10,0 | 78,9 ± 11,2 |
+| 1 sa | Önceden eğitilmiş | son katman | 69,4 ± 10,6 | 78,2 ± 11,4 |
+| 1 sa | Rastgele başlatılmış | tüm katman ort. | 68,9 ± 11,5 | 74,4 ± 13,5 |
+| 1 sa | Rastgele başlatılmış | son katman | 70,1 ± 10,9 | 75,3 ± 13,3 |
+| 30 dk | Önceden eğitilmiş | tüm katman ort. | 69,2 ± 10,8 | 78,1 ± 12,4 |
+| 30 dk | Rastgele başlatılmış | tüm katman ort. | 68,3 ± 10,1 | 74,2 ± 12,0 |
+
+Karşılaştırma (LOPO): LightGBM %72,9 / AUC %80,7 · MiniRocket %72,5.
+
+### Yorum
+- Donmuş EKG gömmeleri görülmemiş bitkide **%69–70** doğruluk veriyor; temel modellerin
+  (%72–73) biraz altında.
+- Önceden eğitilmiş ve rastgele başlatılmış gömmeler arasında doğrulukta fark **yok denecek kadar
+  az** (+1,0–1,2 puan; bitkilerin yalnızca 6/12'sinde önde). **AUC'de ~4 puanlık tutarlı üstünlük**
+  var (78,9'a karşı 74,4) → ön eğitim sıralama bilgisini biraz iyileştiriyor ama karar sınırını
+  belirgin biçimde değiştirmiyor.
+- Rastgele ağırlıklı bir ağın bile %69 vermesi, ROCKET'in mantığıyla uyumlu: rastgele
+  konvolüsyonlar bu sinyalde zaten işe yarar özellik çıkarıyor.
+- Katman taraması (keşif): önceden eğitilmiş modelde erken katmanlar (0–3) biraz daha iyi
+  (%71); fark küçük.
+- **Sonuç:** Donmuş haliyle EKG ön eğitimi belirgin bir kazanç sağlamıyor. Asıl hipotez testi
+  ince ayardır (Colab, `notebooks/02_colab_hubert_ince_ayar.ipynb`); beklenti ılımlı tutulmalı.
+
+## 3. Zaman karıştırıcısı testi
 
 `python scripts/zaman_kontrolu.py` → `zaman_kontrolu_katman.csv`, `zaman_kontrolu_ozet.csv`
 
