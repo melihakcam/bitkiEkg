@@ -32,11 +32,16 @@ def domates_pencereler(pencere: str = "1h", onbellek: bool = True) -> tuple[np.n
     ilk_id = etiket.groupby("node").plant_id.min()  # CH1 = küçük numara
     klasor = domates_klasoru() / "00_time_windows" / "Exp1" / pencere
 
-    X, satirlar = [], []
+    X, satirlar, eksik = [], [], 0
     for node, grup in etiket.groupby("node"):
         for bas in sorted(grup.datetime_start.unique()):
             ts = pd.Timestamp(bas)
             f = klasor / f"{node}_{ts:%Y-%m-%d_%H-%M}.csv"
+            if not f.exists():
+                # 6h'de deneyin ilk 2 saati (00:00–01:59, sınıf 3) ayrı dosya değil; önceki günün
+                # 20:00 dosyasının içinde. Böyle kısa kenar pencereleri atlanır.
+                eksik += 1
+                continue
             w = pd.read_csv(f, usecols=["CH1", "CH2"])
             for kanal in ("CH1", "CH2"):
                 pid = ilk_id[node] + (kanal == "CH2")
@@ -50,23 +55,87 @@ def domates_pencereler(pencere: str = "1h", onbellek: bool = True) -> tuple[np.n
                       how="left", validate="one_to_one")
     if meta["class"].isna().any():
         raise ValueError("Etiketi bulunamayan pencere var")
+    if eksik:
+        kalan = etiket.merge(meta[["plant_id", "datetime_start"]], how="left", indicator=True)
+        atlanan = kalan.loc[kalan["_merge"] == "left_only", "class"].value_counts().to_dict()
+        print(f"[{pencere}] dosyası olmayan {eksik} kenar penceresi atlandı (sınıflar: {atlanan})")
 
     np.savez_compressed(hedef, X=X)
     meta.to_csv(hedef.with_suffix(".csv"), index=False)
     return X, meta
 
 
+def sarmasik_pencereler(onbellek: bool = True, min_doluluk: float = 0.8) -> tuple[np.ndarray, pd.DataFrame]:
+    """Sarmaşık verisinden 1 saatlik, 2 kanallı (CH1, CH2) pencereler ve etiketler.
+
+    Dönüş: X (n, 2, 3600) ham değer (boşluklar doğrusal interpolasyonla doldurulmuş) ve meta
+    (bitki, baslangic, doluluk, gunduz, yagmurlu, sicak_08_20, ruzgarli_08_20). Etiket eşikleri
+    Buss vd. (2025): ışınım > 50 W/m², yağış > 0 mm, sıcaklık > 25 °C, rüzgâr > 1,25 m/s;
+    sıcaklık ve rüzgâr etiketleri yalnızca 08:00–20:00 için tanımlıdır (dışında NaN).
+    Pencere, verinin en az %80'i doluysa kullanılır.
+    """
+    from bitki_ekg.data import SARMASIK_BITKILER, sarmasik_bitki, sarmasik_hava
+
+    hedef = get_path("processed") / "sarmasik_1h.npz"
+    if onbellek and hedef.exists():
+        return np.load(hedef)["X"], pd.read_csv(hedef.with_suffix(".csv"), parse_dates=["baslangic"])
+
+    hava = sarmasik_hava()
+    saatlik = pd.DataFrame({
+        "isinim": hava.isinim_wm2.resample("1h").mean(),
+        "yagis": hava.yagis_mm.resample("1h").sum(),
+        "sicaklik": hava.sicaklik_c.resample("1h").mean(),
+        "ruzgar": hava.ruzgar_hizi_ms.resample("1h").mean(),
+    })
+
+    X, satirlar = [], []
+    for b in SARMASIK_BITKILER:
+        d = sarmasik_bitki(b).resample("1s").mean()  # 1 Hz ızgara; eksik saniyeler NaN
+        for bas, parca in d.groupby(d.index.floor("1h")):
+            if len(parca) != 3600 or bas not in saatlik.index:
+                continue
+            doluluk = parca.CH1.notna().mean()
+            if doluluk < min_doluluk:
+                continue
+            w = parca[["CH1", "CH2"]].interpolate(limit_direction="both").to_numpy(np.float32).T
+            if not np.isfinite(w).all():
+                continue
+            X.append(w)
+            satirlar.append((b, bas, doluluk))
+
+    meta = pd.DataFrame(satirlar, columns=["bitki", "baslangic", "doluluk"])
+    s = saatlik.loc[meta.baslangic].reset_index(drop=True)
+    gunduz_saati = meta.baslangic.dt.hour.between(8, 19)
+    meta["gunduz"] = (s.isinim > 50).astype(int)
+    meta["yagmurlu"] = (s.yagis > 0).astype(int)
+    meta["sicak_08_20"] = np.where(gunduz_saati, (s.sicaklik > 25).astype(float), np.nan)
+    meta["ruzgarli_08_20"] = np.where(gunduz_saati, (s.ruzgar > 1.25).astype(float), np.nan)
+
+    X = np.stack(X)
+    np.savez_compressed(hedef, X=X)
+    meta.to_csv(hedef.with_suffix(".csv"), index=False)
+    return X, meta
+
+
 def robust_z(X: np.ndarray, eps: float = 1e-6) -> np.ndarray:
-    """Pencere başına robust z-skor: (x − medyan) / IQR (Buss vd., 2026)."""
-    med = np.nanmedian(X, axis=1, keepdims=True)
-    q1, q3 = np.nanpercentile(X, [25, 75], axis=1, keepdims=True)
+    """Pencere (ve kanal) başına robust z-skor: (x − medyan) / IQR (Buss vd., 2026); son eksende."""
+    med = np.nanmedian(X, axis=-1, keepdims=True)
+    q1, q3 = np.nanpercentile(X, [25, 75], axis=-1, keepdims=True)
     Z = (X - med) / np.maximum(q3 - q1, eps)
     return np.nan_to_num(Z, nan=0.0).astype(np.float32)
 
 
-def ikili_gorev(meta: pd.DataFrame) -> np.ndarray:
-    """İkili görevde kullanılan pencerelerin maskesi: sınıf 0 (sağlıklı) ve 1 (stresli)."""
-    return meta["class"].isin([0, 1]).to_numpy()
+def ikili_gorev(meta: pd.DataFrame, X: np.ndarray | None = None, en_fazla_eksik: float = 0.01) -> np.ndarray:
+    """İkili görevde kullanılan pencerelerin maskesi: sınıf 0 (sağlıklı) ve 1 (stresli).
+
+    X verilirse örneklerinin %1'inden fazlası eksik olan pencereler de çıkarılır. Neden: 6 sa'te
+    her bitkinin son penceresi (21.06 20:00, kayıt 00:00'da bitiyor) ~1/3 boş ve hepsi "stresli";
+    boşluk sıfırla dolunca model "sıfır = stresli" kısayolunu öğrenebilir (veri_denetimi.py).
+    """
+    maske = meta["class"].isin([0, 1]).to_numpy()
+    if X is not None:
+        maske &= np.isnan(X).mean(axis=1) <= en_fazla_eksik
+    return maske
 
 
 def lopo_bolmeleri(gruplar: np.ndarray) -> Iterator[tuple[int, np.ndarray, np.ndarray]]:
