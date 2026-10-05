@@ -43,18 +43,21 @@ Son güncelleme: 2026-10-02
   ışık sınıflarında olası artefakt)
 - ✅ Faz 1 raporu dolduruldu (`reports/faz1/faz1_rapor.md`); ders şablonu gelince aktarılacak
 
-## Aşama 4 — Ön işleme ⬜
+## Aşama 4 — Ön işleme 🟡
+- ✅ `src/bitki_ekg/preprocessing.py`: domates pencere kümeleri (1 sa, 30 dk), robust z-skor,
+  LOPO ve yazar bölmesi
 - ⬜ `src/bitki_ekg/preprocessing.py`: kalite süzgeci, detrend, pencereleme, yeniden örnekleme, z-skor
 - ⬜ `src/bitki_ekg/splits.py`: bitki bazlı GroupKFold + karşılaştırma için rastgele bölme
 - ⬜ Sarmaşık için ortak etiket kararı: `rain_dry` (öneri) — buharlaşma sütunu %99 boş olduğu
   için türetilmiş kuraklık etiketi pek mümkün değil
 - ⬜ İşlenmiş pencereler → `data/processed/` (parquet / npy)
 
-## Aşama 5 — Temel modeller ⬜ (yerelde)
-- ⬜ kNN, Naive Bayes (uygun olmayan)
-- ⬜ tsfresh + LightGBM (klasik)
-- ⬜ ROCKET (aeon)
-- ⬜ Ortak değerlendirme: doğruluk, F1, ROC-AUC; katman ortalaması ± std
+## Aşama 5 — Temel modeller ✅ (yerelde) → `docs/sonuclar.md`
+- ✅ kNN, Naive Bayes (uygun olmayan): ~%50
+- ✅ tsfresh + LightGBM: LOPO %72,9 · yazar bölmesi %87,2 (yazarlar %84,0) · rastgele %90,9
+- ✅ MiniRocket: LOPO %72,5–73,1
+- ✅ Zaman karıştırıcısı testi: kontrol bitkilerinde 30 dk'da şans düzeyi
+- ⬜ MiniRocket AUC düzeltmesi ve hızlandırma (n_jobs, dönüşüm önbelleği)
 
 ## Aşama 6 — Derin ve transfer modeller ⬜ (Colab/Kaggle)
 - ⬜ InceptionTime
