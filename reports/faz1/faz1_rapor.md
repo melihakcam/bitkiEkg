@@ -22,7 +22,7 @@ iyimser göstermesidir.
 
 | Veri seti (literatürdeki adı, sürüm) | İçerik | Link | Projedeki rolü |
 |---|---|---|---|
-| Early Detection of Water Stress by Plant Electrophysiology (Buss vd., 2026), Zenodo v2 | Domates, 16 bitki, 18 gün, 10 Hz; CC-BY | https://doi.org/10.5281/zenodo.18876513 | Ana veri seti (eğitim/test) |
+| Early Detection of Water Stress by Plant Electrophysiology (Buss vd., 2026), Zenodo v2 | Domates, 16 bitki, 18 gün; cihazda 10 Hz, veri setinde 1 Hz; CC-BY | https://doi.org/10.5281/zenodo.18876513 | Ana veri seti (eğitim/test) |
 | When Plants Respond: Electrophysiology and ML for Green Monitoring Systems (Buss vd., 2025), Zenodo v1 | Sarmaşık, 5 ay dış ortam; CC-BY | https://doi.org/10.5281/zenodo.15095523 | Veri setleri/türler arası test |
 | Stimulus classification with electrical potential and impedance of living plants (Buss vd., 2023), Zenodo v1 | Domates, Zamioculcas; rüzgâr, ısı, ışık; CC-BY | https://doi.org/10.5281/zenodo.7126105 | Ek veri / ön eğitim adayı |
 
@@ -34,12 +34,18 @@ Veriler `scripts/download_data.py` ile indirilir ve MD5 ile doğrulanır.
 Her veri seti için aşağıdaki bilgiler raporlanacaktır.
 
 ### 3.1 Domates su stresi
-- Dosya formatı ve yapısı: [DOLDURULACAK]
-- Bitki sayısı / kayıt süresi / örnekleme hızı: 16 bitki, 18 gün, 10 Hz (doğrulanacak)
-- Kanal sayısı ve kanalların anlamı: [DOLDURULACAK]
-- Etiket tanımı (su stresi nasıl belirlenmiş): [DOLDURULACAK]
-- Toplam örnek / pencere sayısı: [DOLDURULACAK]
-- Sınıf dağılımı (stresli / stressiz): [DOLDURULACAK]
+- Dosya formatı ve yapısı: hazır pencereler (`datetime, CH1, CH2` CSV), tsfresh öznitelikleri,
+  yazarların eğitim/doğrulama/test bölmesi ve sonuçları; 5 pencere süresi (1 dk, 5 dk, 30 dk, 1 sa, 6 sa)
+- Bitki sayısı / kayıt süresi / örnekleme hızı: 16 bitki, 18 gün (04–21.06.2025);
+  cihazda 10 Hz, veri setinde 1 Hz; birim mV
+- Kanal sayısı ve kanalların anlamı: 8 PhytoNode cihazı, her cihazın CH1 ve CH2'si ayrı bir bitki
+  (bitki başına tek kanal, gövdeye batırılmış 2 elektrot arası potansiyel farkı)
+- Etiket tanımı: 04–08.06 tüm bitkiler 400 mL/gün; sonra 4 grup (kontrol 400 mL, aşırı sulanmış,
+  200 mL, 100 mL). İlk 3 gün = sağlıklı (0), son 3 gün = stresli (1), aradaki günler ve kontrol
+  bitkileri = 3 (eğitimde kullanılmıyor). **Aşırı sulanan grup da "stresli" sayıldığından etiket
+  "sulama stresi"dir.**
+- Toplam örnek / pencere sayısı: 1 sa pencerede 6 912 (16 bitki × 432); 1 dk'da 207 352 dosya
+- Sınıf dağılımı (1 sa): sağlıklı 864 · stresli 864 · kullanılmayan 5 184 → ikili görev dengeli
 - Eksik veri oranı, kopuk elektrot süreleri: [DOLDURULACAK]
 - Şekiller: ham sinyal örnekleri, sınıf bazlı ortalama sinyal, bitki bazlı dağılımlar [DOLDURULACAK]
 
@@ -76,7 +82,7 @@ Uygulanan adımların sonuçları (atılan pencere sayısı, son sınıf dağıl
 
 | Çalışma | Veri | Yöntem | Bölme | En iyi sonuç |
 |---|---|---|---|---|
-| Buss vd. (2026) | Domates su stresi | 1 dk–6 sa pencerelerden öznitelik + AutoML; derin öğrenme ile karşılaştırma | Görülmemiş bitkiler | %92'ye varan doğruluk; derin öğrenme AutoML'in gerisinde |
+| Buss vd. (2026) | Domates sulama stresi (16 bitki, 4 sulama grubu) | 1 dk–6 sa pencere, ~700 tsfresh özniteliği + NaiveAutoML (HGB), MI + SBS öznitelik seçimi, sıcaklık ölçekleme; DL: CNN, InceptionTime, Mamba (Optuna) | Test: 2 görülmemiş bitki; eğitim/doğrulama: kalan 10 bitkide rastgele 80/20 | Test doğruluğu HGB 62,6 (1 dk) – 89,6 (6 sa); 30 dk 83,2. En iyi DL: CNN 6 sa 97,0. Doğrulama %92'ye kadar. Stres 4. günde tespit |
 | Buss vd. (2025) | Sarmaşık, dış ortam (4 bitki, 5 ay) | 1 sa pencere, z-skor, 700+ tsfresh özniteliği, SMOTE; NB, kNN, doğrusal SVM, MLP, RF, AutoML. Etiketler hava durumundan eşikle: gündüz/gece, yağmurlu/kuru, soğuk/sıcak, rüzgârlı/sakin | Rastgele %80/%20 (bitki/zaman bazlı değil) | Ort. makro F1: RF %90,7, AutoML %89,6; en iyi yağmurlu/kuru RF + öznitelik seçimi %95,5. NB %31,9–63,4, kNN %49,1–69,4 |
 | Buss vd. (2023) | Domates, Zamioculcas uyaranları | Diskriminant analizi ve derin öğrenme karşılaştırması | [DOLDURULACAK] | [DOLDURULACAK] |
 | Chatterjee vd. (2015) | PLEASED | İstatistiksel öznitelik + diskriminant analizi | [DOLDURULACAK] | [DOLDURULACAK] |

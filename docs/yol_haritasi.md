@@ -28,7 +28,7 @@ Son güncelleme: 2026-10-02
 - ✅ Sarmaşık makalesi okundu (Buss vd., 2025): elektrot yerleşimi, etiket eşikleri, rastgele
   bölme, tüm sonuçlar → notlar ve Faz 1 raporu
 - ✅ Domates: yapı, 16 bitki / 8 cihaz, 1 Hz, sınıflar 0/1/3, yazarların sonuçları → notlar
-- ⬜ Domates makalesini (Buss 2026) okuyup sınıf 3, kontrol bitkileri ve bölme stratejisini doğrulamak
+- ✅ Domates makalesi (Buss 2026) okundu: 4 sulama grubu, etiketler, 2 bitkilik test, tüm sonuçlar
 - ⬜ `classification_results.xlsx` → Buss 2023 satırındaki boşluklar
 - ⬜ Uyaran ve domates makalelerini okumak (Buss 2023, Buss 2026)
 - ⬜ Model girdi özelliklerini doğrula (ECG-FM, HuBERT-ECG model kartları)
@@ -67,7 +67,8 @@ Son güncelleme: 2026-10-02
 - ⬜ Faz 2 makale formatında rapor, sunum
 
 ## Açık kararlar
-- Öneride domates örnekleme hızı 10 Hz yazıyor, veri 1 Hz → rapor/README düzeltilecek
+- ~~Öneride 10 Hz yazıyor~~ → cihaz 10 Hz, veri seti 1 Hz; raporda ikisi de belirtildi
+- Etiket ifadesi: "su stresi" yerine "sulama stresi" (aşırı sulanan grup da stresli sayılıyor)
 - Sarmaşık ortak etiketi (Aşama 4) — öneri: yağmurlu/kuru
 - Literatür: aynı veri setlerini kullanan 5 kaynak şartı (şu an 3 Buss çalışması) — ek kaynak
   aranacak ya da hocaya danışılacak

@@ -35,12 +35,63 @@ Meta sütunlar: `plant_id, node, day, datetime_start, datetime_end, class`.
 | 3 | Aradaki 12 gün + PN8/PN9'daki 4 bitkinin (id 4–7) tamamı | 5 184 | Geçiş dönemi / kontrol bitkileri, ikili görevde kullanılmıyor |
 
 - İkili görev dengeli: 864 / 864. Bitki bazlı bölme için 12 bitki kullanılabilir.
-- Sınıf 3'ün ve PN8/PN9 bitkilerinin anlamı (kontrol grubu mu?) makaleden netleşecek.
+- Makale ile doğrulandı (aşağıda): PN8/PN9 bitkileri = 400 mL kontrol grubu.
 
 ### Yazarların sonucu (1 sa, AutoML, `03_results/Exp1/1h/`)
 - Doğrulama: doğruluk 0,901, makro F1 0,901 (282 pencere)
 - **Test doğruluğu 0,823** (288 pencere), eğitim doğruluğu 1,0
-- Bölme stratejisi (bitki bazlı mı?) makaleden ve `02_test_train_val_split` içeriğinden doğrulanacak.
+
+### Makaleden (Buss, Aust & Hamann, 2026 — arXiv 2604.28038)
+- **Düzenek:** 16 domates, sera, 04–22.06.2025. PhytoNode cihazı başına 2 bitki; gümüş kaplı
+  2 elektrot gövdeye batırılmış (biri tabanda, diğeri ≥30 cm yukarıda).
+- **Örnekleme:** cihazda **10 Hz**, yazarlar **1 Hz'e** indirmiş (veri setindeki hal).
+  Birim **mV** (EDP). Toprak nemi 0,1 Hz ölçülmüş ama indirdiğimiz zip'te yok.
+- **Sulama:** 04–08.06 tüm bitkiler 400 mL/gün; sonra 4 grup × 4 bitki:
+
+  | Grup | Sulama | Veri setinde |
+  |---|---|---|
+  | Kontrol | 400 mL/gün | PN8, PN9 (id 4–7), hep sınıf 3 |
+  | Aşırı sulanmış | Sürekli kovada | sınıf 0 → 1 |
+  | Orta kuraklık | 200 mL/gün | sınıf 0 → 1 |
+  | Şiddetli kuraklık | 100 mL/gün | sınıf 0 → 1 |
+
+  Hangi cihazın hangi gruba ait olduğu makalede yazmıyor (`02_test_train_val_split`'ten çıkarılabilir).
+- **Etiket:** ilk 3 gün = sağlıklı (0), son 3 gün = stresli (1); aradaki günler (3) eğitimde
+  kullanılmaz, geçişin zamanlamasını görmek için kullanılır.
+  ⚠️ **Aşırı sulanmış grup da "stresli"** sayılıyor → etiket "su eksikliği" değil, "sulama stresi".
+- **Bölme:** Test = **yalnızca 2 bitki** (1 aşırı sulanmış + 1 100 mL), kontroller dışarıda;
+  kalan 10 bitki **rastgele 80/20** eğitim/doğrulama (aynı bitkiler her ikisinde) → doğrulama
+  iyimser. Öznitelik seçiminde 5 katlı GroupKFold (her katta 2 bitki).
+- **Yöntem:** tsfresh ~700 öznitelik, varyans < 0,01 atılır, min-max; NaiveAutoML → HGB
+  (Histogram Gradient Boosting); MI ile ilk 200 + ardışık geriye eleme (SBS); sıcaklık ölçekleme
+  ile kalibrasyon. DL: CNN, InceptionTime, Mamba (Optuna, 100 deneme, robust z-skor
+  `(x − medyan) / IQR`, 5 tohum).
+- **Pencere başına örnek (eğitim / doğrulama / test):** 1 dk 69 112 / 17 278 / 17 278 ·
+  5 dk 13 822 / 3 458 / 3 456 · 30 dk 2 302 / 578 / 576 · 1 sa 1 158 / 282 / 288 · 6 sa 195 / 45 / 48.
+- **Test doğruluğu (%):**
+
+  | Pencere | HGB | HGB + SBS | CNN | InceptionTime | Mamba |
+  |---|---|---|---|---|---|
+  | 1 dk | 62,6 | 61,6 | 63,6 ± 1,2 | 62,3 ± 1,3 | 62,3 ± 0,8 |
+  | 5 dk | 76,3 | 75,6 | 69,0 ± 2,0 | 71,0 ± 1,6 | 68,8 ± 2,0 |
+  | 30 dk | 83,2 | 82,5 | 73,6 ± 2,8 | 71,1 ± 2,4 | 80,2 ± 3,9 |
+  | 1 sa | 84,0 | 82,3 | 84,8 ± 2,9 | 77,3 ± 5,5 | 83,8 ± 3,0 |
+  | 6 sa | 89,6 | 87,5 | 97,0 ± 1,1 | 88,3 ± 5,1 | 58,3 ± 11,9 |
+
+  Doğrulama HGB: 92,2 / 92,6 / 91,0 / 90,1 / 77,8. Test AUPRC: 0,581 / 0,728 / 0,871 / 0,871 / 0,937.
+- **Önerilen pencere:** 30 dk. **Erken tespit:** 100 ve 200 mL gruplarında 4. gün, aşırı
+  sulanmışta ~6. gün; kontrol grubu eşiğin altında kalıyor.
+- **Çok sınıflı (sağlıklı / aşırı / eksik sulama):** doğrulama %95, **test %48** → stres türü ayrılamıyor.
+- **Yazarların kısıtları:** 16 bitki, tek sera/mevsim, yalnızca belirli sulama rejimleri;
+  %50 eşiği fizyolojik başlangıç anlamına gelmiyor.
+
+### Bizim proje için çıkarımlar
+- Test yalnızca 2 bitki → **12 bitkiyle bitki-dışarıda-bırak (LOPO)** değerlendirme güçlü bir katkı.
+- InceptionTime zaten raporlanmış → doğrudan kıyas noktası.
+- Sürekli 1 Hz pencereler elimizde → kendi pencere sürelerimizi ve yeniden örneklemeyi seçebiliriz.
+- Ek literatür (farklı veri setleri, aynı problem): Najdenovska vd. (2021) Applied Sciences
+  11(12):5640 — 36 domates, XGBoost, 1 dk %85; González i Juclà vd. (2023) Sci Rep 13:9633 —
+  16 domates azot eksikliği, derin öğrenme %99.
 
 ## Sarmaşık dış ortam (Zenodo 15095523)
 - `Plant_data.zip`: 423 MB, 579 öğe, açılmış 1,9 GB.
