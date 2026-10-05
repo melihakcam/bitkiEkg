@@ -17,13 +17,9 @@ Son güncelleme: 2026-10-02
 |---|---|---|---|
 | Uyaran | `SupplementaryCode.zip` + küçük dosyalar | 124 MB | ✅ İndi, doğrulandı, açıldı |
 | Sarmaşık | `Plant_data.zip` + hava durumu + feature_selection | 424 MB | ✅ İndi, doğrulandı, açıldı |
-| Domates | `AdditionalMaterial.zip` | 10,2 GB | ⏸️ Durduruldu (85 MB indi, `.part` olarak duruyor) |
+| Domates | `AdditionalMaterial.zip` | 9,7 GB (açılmış 22,8 GB) | ✅ İndi, doğrulandı, açıldı (2026-10-05) |
 
 - **İndirilmeyecek:** `DeepClassifier.zip` (4,2 GB, yalnızca yazarların modelleri).
-- Hat hızı ~200–900 KB/s; domates bu hızla 3–14 saat sürer. Seçenekler:
-  1. İçerik listesine bakmak (35 MB) → yalnızca ham sinyal dosyalarını zip'ten seçerek çekmek
-  2. Colab'a doğrudan Zenodo'dan indirtmek, orada işleyip küçültmek
-  3. Kaldığı yerden devam: `.venv\Scripts\python scripts\download_data.py domates_su_stresi --extract`
 
 ## Aşama 2 — Veriyi tanıma 🟡
 - ✅ Uyaran: UCR formatı (512 örneklik pencere, 5 sınıf) + ham `UzL/*.csv` (2 kanal, ~0,5 Hz,
@@ -31,7 +27,8 @@ Son güncelleme: 2026-10-02
 - ✅ Sarmaşık: `datetime, CH1, CH2`, 1 Hz; kapsama %50–59; iki dosyada ~19 milyon boş satır
 - ✅ Sarmaşık makalesi okundu (Buss vd., 2025): elektrot yerleşimi, etiket eşikleri, rastgele
   bölme, tüm sonuçlar → notlar ve Faz 1 raporu
-- ⬜ Domates: dosya yapısı, su stresi etiketi, bitki kimliği (veri gelince)
+- ✅ Domates: yapı, 16 bitki / 8 cihaz, 1 Hz, sınıflar 0/1/3, yazarların sonuçları → notlar
+- ⬜ Domates makalesini (Buss 2026) okuyup sınıf 3, kontrol bitkileri ve bölme stratejisini doğrulamak
 - ⬜ `classification_results.xlsx` → Buss 2023 satırındaki boşluklar
 - ⬜ Uyaran ve domates makalelerini okumak (Buss 2023, Buss 2026)
 - ⬜ Model girdi özelliklerini doğrula (ECG-FM, HuBERT-ECG model kartları)
@@ -70,7 +67,7 @@ Son güncelleme: 2026-10-02
 - ⬜ Faz 2 makale formatında rapor, sunum
 
 ## Açık kararlar
-- Domates verisi nasıl alınacak (Aşama 1: seçerek indirme / Colab / tamamını indirme)
+- Öneride domates örnekleme hızı 10 Hz yazıyor, veri 1 Hz → rapor/README düzeltilecek
 - Sarmaşık ortak etiketi (Aşama 4) — öneri: yağmurlu/kuru
 - Literatür: aynı veri setlerini kullanan 5 kaynak şartı (şu an 3 Buss çalışması) — ek kaynak
   aranacak ya da hocaya danışılacak

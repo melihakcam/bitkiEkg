@@ -4,8 +4,43 @@ Zip içerikleri `scripts/download_data.py --peek` ile, dosyalar indirilmeden inc
 (2026-10-02). Tam listeler: `data/interim/peek_*.txt` (git dışı).
 
 ## Domates su stresi (Zenodo 18876513)
-- `AdditionalMaterial.zip`: 9,5 GB, **260 512 öğe**, içerik listesi 35,4 MB.
-- İçerik listesi henüz çekilmedi (yavaş bağlantıda ~1 saat).
+- `AdditionalMaterial.zip`: 9,7 GB, MD5 doğrulandı (2026-10-05). Açılmış: 260 483 dosya,
+  22,8 GB → `data/raw/domates_su_stresi/AdditionalMaterial/Tomato_Zenodo/`
+
+### Klasör yapısı
+| Klasör | İçerik | Boyut |
+|---|---|---|
+| `00_time_windows/Exp1/{1min,5min,30min,1h,6h}/` | Sinyal pencereleri, `<cihaz>_<tarih>_<saat>.csv` (ör. `PN10_2025-06-04_00-00.csv`) | 3,3 GB |
+| `01_features/Exp1/<pencere>/` | tsfresh öznitelikleri: `all_features`, `features_with_class`, `filtered_features_with_class` | 14,1 GB |
+| `02_test_train_val_split/Exp1/<pencere>/` | Yazarların `train/val/test.csv` bölmesi (1min train 2,1 GB) | 4,1 GB |
+| `03_results/Exp1/<pencere>/` | AutoML / NaiveAutoML modelleri (`.joblib`), raporlar, karışıklık matrisleri | 1,3 GB |
+
+Pencere sayıları (`00_time_windows`, dosya): 1min 207 352 · 5min 41 472 · 30min 6 912 ·
+1h 3 456 · 6h 584.
+
+### Sinyal
+- Her pencere CSV'si: `datetime, CH1, CH2`, **1 Hz** (öneride yazılan 10 Hz değil — düzeltilecek).
+  Değerler ~−50 civarı, büyük ihtimalle mV (doğrulanacak).
+- **8 PhytoNode cihazı** (PN2, PN5, PN8, PN9, PN10, PN11, PN12, PN16); her cihazın CH1 ve
+  CH2'si **iki ayrı bitki** → **16 bitki** (`plant_id` 0–15; ör. PN2 → 0 ve 1).
+- Süre: 2025-06-04 – 2025-06-21 (18 gün).
+
+### Etiketler (`01_features/.../features_with_class.csv`, 1 sa pencere)
+Meta sütunlar: `plant_id, node, day, datetime_start, datetime_end, class`.
+
+| Sınıf | Bitkiler / günler | Pencere (1 sa) | Yorum (çıkarım — makaleden doğrulanacak) |
+|---|---|---|---|
+| 0 | 12 bitki, ilk 3 gün (04–06.06) | 864 | Sulanmış, stressiz |
+| 1 | Aynı 12 bitki, son 3 gün (19–21.06) | 864 | Su stresi |
+| 3 | Aradaki 12 gün + PN8/PN9'daki 4 bitkinin (id 4–7) tamamı | 5 184 | Geçiş dönemi / kontrol bitkileri, ikili görevde kullanılmıyor |
+
+- İkili görev dengeli: 864 / 864. Bitki bazlı bölme için 12 bitki kullanılabilir.
+- Sınıf 3'ün ve PN8/PN9 bitkilerinin anlamı (kontrol grubu mu?) makaleden netleşecek.
+
+### Yazarların sonucu (1 sa, AutoML, `03_results/Exp1/1h/`)
+- Doğrulama: doğruluk 0,901, makro F1 0,901 (282 pencere)
+- **Test doğruluğu 0,823** (288 pencere), eğitim doğruluğu 1,0
+- Bölme stratejisi (bitki bazlı mı?) makaleden ve `02_test_train_val_split` içeriğinden doğrulanacak.
 
 ## Sarmaşık dış ortam (Zenodo 15095523)
 - `Plant_data.zip`: 423 MB, 579 öğe, açılmış 1,9 GB.
