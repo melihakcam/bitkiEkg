@@ -52,11 +52,10 @@ LOPO 80,7 ± 15,4 (1 sa), 79,3 ± 15,2 (30 dk) · yazar 94,6 / 91,9 · rastgele 
 | LightGBM | 94 | 60 | 72 | 81 | 74 | 71 | 74 | 69 | 79 | 57 | 58 | 85 |
 | MiniRocket | 85 | 53 | 83 | 93 | 81 | 76 | 61 | 63 | 79 | 51 | 67 | 78 |
 
-### Bilinen eksikler (sonraki çalıştırmada düzeltilecek)
-- MiniRocket'in `predict_proba` çıktısı 0/1 olduğu için AUC'si doğrulukla aynı çıkıyor → ridge
-  karar fonksiyonundan AUC hesaplanmalı.
-- MiniRocket dönüşümü her bölmede yeniden hesaplanıyor ve çekirdeklerin hepsini kullanmıyor
-  → `n_jobs=-1` ve dönüşüm önbelleği ile hızlandırılabilir.
+### Düzeltme (2026-10-05)
+MiniRocket AUC'si ilk çalıştırmada 0/1 olasılıklardan hesaplanıyordu (doğrulukla aynı çıkıyordu);
+ridge karar fonksiyonuyla düzeltildi ve `n_jobs=-1` eklendi. Diğer modellerin sonuçları aynı kaldı.
+MiniRocket düzeltilmiş AUC: LOPO 79,5 (1 sa ve 30 dk) · yazar 89,5 / 89,8 · rastgele 88,0 / 86,8.
 
 ## 2. HuBERT-ECG doğrusal sonda (ön test, GPU'suz)
 
@@ -94,7 +93,55 @@ Karşılaştırma (LOPO): LightGBM %72,9 / AUC %80,7 · MiniRocket %72,5.
 - **Sonuç:** Donmuş haliyle EKG ön eğitimi belirgin bir kazanç sağlamıyor. Asıl hipotez testi
   ince ayardır (Colab, `notebooks/02_colab_hubert_ince_ayar.ipynb`); beklenti ılımlı tutulmalı.
 
-## 3. Zaman karıştırıcısı testi
+## 3. HuBERT-ECG ince ayarı (Colab, T4 GPU)
+
+`notebooks/02_colab_hubert_ince_ayar.ipynb` → `results/colab/ozet_1h.csv`
+(bitki başına JSON ve epoch geçmişi Drive'da `bitkiEkg_sonuclar/1h/`)
+
+- Ayarlar (deney öncesi sabit): 15 epoch, toplu 32, AdamW (gövde 3e-5, baş 1e-3), ağırlık
+  çürümesi 0,01, %10 ısınma + doğrusal azalma, CNN öznitelik çıkarıcı dondurulmuş,
+  mask_time_prob 0,05; her katmanda 2 eğitim bitkisi iç doğrulama, en iyi epoch iç doğrulama
+  AUC'siyle seçildi. Bitki başına ~50–70 s (T4). Yalnızca 1 sa pencere (30 dk kısmı GPU kotası
+  için durduruldu).
+
+| Deney | Doğruluk | F1 | AUC | En iyi epoch (ortanca) |
+|---|---|---|---|---|
+| Önceden eğitilmiş | 71,1 ± 8,9 | 69,6 ± 13,6 | 79,4 ± 11,5 | 4 (aralık 0–12) |
+| Rastgele başlatılmış | 69,2 ± 11,6 | 65,3 ± 18,6 | 77,0 ± 16,2 | 12 (aralık 0–14) |
+
+## 4. İstatistiksel karşılaştırma (1 sa, LOPO, 12 bitki)
+
+`python scripts/karsilastir.py --pencere 1h` → `karsilastirma_1h.csv`, `bitki_bazinda_1h.csv`,
+`results/figures/karsilastirma_1h.png`. Referans: tsfresh + LightGBM. Fark = model − referans
+(puan), %95 bootstrap GA, eşleştirilmiş Wilcoxon.
+
+| Model | Doğruluk | Fark [%95 GA] | p | AUC |
+|---|---|---|---|---|
+| tsfresh + LightGBM | 72,9 | — | — | 80,7 |
+| MiniRocket | 72,5 | −0,3 [−5,0; 4,6] | 0,99 | 79,5 |
+| HuBERT ince ayar (önceden eğitilmiş) | 71,1 | −1,8 [−6,6; 2,8] | 0,44 | 79,4 |
+| HuBERT donmuş (önceden eğitilmiş) | 70,1 | −2,7 [−6,5; 1,0] | 0,12 | 78,9 |
+| HuBERT ince ayar (rastgele) | 69,2 | −3,7 [−11,5; 3,9] | 0,41 | 77,0 |
+| HuBERT donmuş (rastgele) | 68,9 | −3,9 [−9,8; 1,2] | 0,34 | 74,4 |
+| Naive Bayes | 50,6 | −22,2 [−28,4; −16,4] | <0,001 | 52,6 |
+| kNN | 50,5 | −22,4 [−29,6; −15,6] | <0,001 | 50,7 |
+
+Ön eğitimin etkisi (önceden eğitilmiş − rastgele, aynı mimari):
+- İnce ayar: doğruluk +1,9 [−2,0; 6,1], p = 0,61 · AUC +2,4 [−2,3; 8,0], p = 0,79
+- Donmuş: doğruluk +1,2 [−2,1; 4,6], p = 0,66 · **AUC +4,5 [1,6; 7,7], p = 0,016** (9/12 bitki)
+
+### Yorum
+- LightGBM, MiniRocket ve HuBERT-ECG (ince ayar) arasında **istatistiksel olarak anlamlı fark
+  yok**; üçü de görülmemiş bitkide ~%71–73. Yalnızca kNN ve NB anlamlı biçimde kötü.
+- **EKG ön eğitimi doğruluğu anlamlı artırmıyor.** Tek anlamlı etki donmuş gömmelerde AUC
+  (+4,5, p = 0,016; düzeltilmemiş p, 18 karşılaştırma içinde — Bonferroni sonrası anlamlı değil).
+- Ön eğitim **daha hızlı yakınsama** sağlıyor (en iyi epoch ortancası 4'e karşı 12) ve
+  bitkiler arası değişkenliği azaltıyor (std 8,9'a karşı 11,6).
+- 12 bitkiyle güç düşük: ±5 puanlık farklar ayırt edilemiyor. Bu bir kısıt olarak raporlanmalı.
+- Çıkarım: bu veri ölçeğinde EKG temel modeli bitki sinyaline **aktarılabiliyor ama üstünlük
+  sağlamıyor** (Wahid vd. 2026'nın hipotezine kısmi, olumsuz yönde ilk deneysel kanıt).
+
+## 5. Zaman karıştırıcısı testi
 
 `python scripts/zaman_kontrolu.py` → `zaman_kontrolu_katman.csv`, `zaman_kontrolu_ozet.csv`
 

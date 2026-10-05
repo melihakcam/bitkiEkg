@@ -53,11 +53,16 @@ def tablo_olustur(pencere: str) -> pd.DataFrame:
     colab = PROJECT_ROOT / "results" / "colab" / pencere
     adlar = {"onceden_egitilmis": "HuBERT ince ayar (önceden eğitilmiş)",
              "rastgele_baslatilmis": "HuBERT ince ayar (rastgele)"}
+    ozet = PROJECT_ROOT / "results" / "colab" / f"ozet_{pencere}.csv"  # Colab not defterinin özet çıktısı
     for deney, ad in adlar.items():
         satir = [json.loads(f.read_text(encoding="utf-8")) for f in sorted((colab / deney).glob("bitki_*.json"))]
         if satir:
             parcalar.append(pd.DataFrame([{"model": ad, "bitki": r["test_bitkisi"], "dogruluk": r["dogruluk"],
                                            "auc": r["auc"]} for r in satir]))
+        elif ozet.exists():
+            o = pd.read_csv(ozet)
+            o = o[o.deney == deney]
+            parcalar.append(pd.DataFrame({"model": ad, "bitki": o.bitki, "dogruluk": o.dogruluk, "auc": o.auc}))
 
     return pd.concat(parcalar).pivot_table(index="bitki", columns="model", values=["dogruluk", "auc"])
 

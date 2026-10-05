@@ -1,0 +1,19 @@
+model,karsi,olcut,n_bitki,model_ort,karsi_ort,fark_ort,ga_alt,ga_ust,daha_iyi_bitki,wilcoxon_p
+HuBERT donmuş (rastgele),tsfresh + LightGBM,dogruluk,12,68.9236,72.8588,-3.9352,-9.7801,1.2153,5,0.3384
+HuBERT donmuş (rastgele),tsfresh + LightGBM,auc,12,74.4036,80.7115,-6.3079,-12.9825,-0.3183,4,0.1294
+HuBERT donmuş (önceden eğitilmiş),tsfresh + LightGBM,dogruluk,12,70.1389,72.8588,-2.7199,-6.4815,0.9838,2,0.124
+HuBERT donmuş (önceden eğitilmiş),tsfresh + LightGBM,auc,12,78.948,80.7115,-1.7634,-6.6344,2.929,5,0.5693
+HuBERT ince ayar (rastgele),tsfresh + LightGBM,dogruluk,12,69.1551,72.8588,-3.7037,-11.5162,3.8773,4,0.4126
+HuBERT ince ayar (rastgele),tsfresh + LightGBM,auc,12,77.0351,80.7115,-3.6764,-13.4613,5.0911,6,0.791
+HuBERT ince ayar (önceden eğitilmiş),tsfresh + LightGBM,dogruluk,12,71.0648,72.8588,-1.794,-6.5972,2.8356,5,0.4351
+HuBERT ince ayar (önceden eğitilmiş),tsfresh + LightGBM,auc,12,79.411,80.7115,-1.3005,-7.188,4.3516,5,0.791
+MiniRocket,tsfresh + LightGBM,dogruluk,12,72.5116,72.8588,-0.3472,-5.0347,4.5718,5,0.9854
+MiniRocket,tsfresh + LightGBM,auc,12,79.5107,80.7115,-1.2008,-5.4302,3.3389,5,0.6221
+Naive Bayes,tsfresh + LightGBM,dogruluk,12,50.6366,72.8588,-22.2222,-28.4144,-16.4352,0,0.0005
+Naive Bayes,tsfresh + LightGBM,auc,12,52.5857,80.7115,-28.1258,-34.5888,-21.1016,0,0.0005
+kNN,tsfresh + LightGBM,dogruluk,12,50.463,72.8588,-22.3958,-29.6296,-15.6236,0,0.0005
+kNN,tsfresh + LightGBM,auc,12,50.68,80.7115,-30.0315,-39.0007,-20.4619,1,0.001
+HuBERT ince ayar (önceden eğitilmiş),HuBERT ince ayar (rastgele),dogruluk,12,71.0648,69.1551,1.9097,-2.0255,6.0764,6,0.6079
+HuBERT ince ayar (önceden eğitilmiş),HuBERT ince ayar (rastgele),auc,12,79.411,77.0351,2.3759,-2.3439,8.0006,5,0.791
+HuBERT donmuş (önceden eğitilmiş),HuBERT donmuş (rastgele),dogruluk,12,70.1389,68.9236,1.2153,-2.0833,4.6296,6,0.6562
+HuBERT donmuş (önceden eğitilmiş),HuBERT donmuş (rastgele),auc,12,78.948,74.4036,4.5444,1.6284,7.7402,9,0.0161
