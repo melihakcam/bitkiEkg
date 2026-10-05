@@ -81,7 +81,7 @@ def bolmeler(gruplar, y):
 
 def calistir(pencere: str) -> pd.DataFrame:
     X, meta = domates_pencereler(pencere)
-    m = ikili_gorev(meta)
+    m = ikili_gorev(meta, X)  # %1'den fazla eksik örnekli pencereler çıkarılır (veri_denetimi.py)
     X, meta = X[m], meta[m].reset_index(drop=True)
     y = meta["class"].to_numpy(int)
     gruplar = meta["plant_id"].to_numpy(int)
@@ -108,7 +108,11 @@ def main():
 
     katman = pd.concat([calistir(p) for p in args.pencere], ignore_index=True)
     tablolar = get_path("tables")
-    katman.to_csv(tablolar / "temel_modeller_katman.csv", index=False)
+    kayit = tablolar / "temel_modeller_katman.csv"
+    if kayit.exists():  # başka pencerelerin sonuçlarını koru, yalnızca çalıştırılanları değiştir
+        eski = pd.read_csv(kayit)
+        katman = pd.concat([eski[~eski.pencere.isin(args.pencere)], katman], ignore_index=True)
+    katman.to_csv(kayit, index=False)
 
     ozet = (katman.groupby(["pencere", "model", "bolme"])[["dogruluk", "f1", "auc"]]
             .agg(["mean", "std"]).round(3))

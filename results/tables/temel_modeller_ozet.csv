@@ -25,3 +25,15 @@ pencere,model,bolme,,,,,,
 30min,tsfresh + LightGBM,lopo,0.705,0.114,0.664,0.169,0.793,0.152
 30min,tsfresh + LightGBM,rastgele,0.922,0.012,0.924,0.012,0.976,0.006
 30min,tsfresh + LightGBM,yazar,0.839,,0.845,,0.919,
+6h,MiniRocket,lopo,0.761,0.163,0.736,0.206,0.871,0.163
+6h,MiniRocket,rastgele,0.794,0.06,0.785,0.067,0.893,0.041
+6h,MiniRocket,yazar,0.913,,0.913,,0.979,
+6h,Naive Bayes,lopo,0.627,0.097,0.508,0.152,0.628,0.11
+6h,Naive Bayes,rastgele,0.616,0.018,0.513,0.06,0.601,0.029
+6h,Naive Bayes,yazar,0.783,,0.722,,0.781,
+6h,kNN,lopo,0.543,0.137,0.435,0.202,0.591,0.175
+6h,kNN,rastgele,0.594,0.033,0.533,0.014,0.631,0.05
+6h,kNN,yazar,0.522,,0.45,,0.578,
+6h,tsfresh + LightGBM,lopo,0.812,0.175,0.776,0.224,0.867,0.2
+6h,tsfresh + LightGBM,rastgele,0.859,0.084,0.85,0.092,0.948,0.036
+6h,tsfresh + LightGBM,yazar,0.957,,0.957,,0.996,
