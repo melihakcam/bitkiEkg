@@ -1,9 +1,9 @@
 ,,,dogruluk,dogruluk,f1,f1,auc,auc
 ,,,mean,std,mean,std,mean,std
 pencere,model,bolme,,,,,,
-1h,MiniRocket,lopo,0.725,0.132,0.72,0.145,0.725,0.132
-1h,MiniRocket,rastgele,0.797,0.015,0.798,0.02,0.797,0.015
-1h,MiniRocket,yazar,0.819,,0.833,,0.819,
+1h,MiniRocket,lopo,0.725,0.132,0.72,0.145,0.795,0.145
+1h,MiniRocket,rastgele,0.797,0.015,0.798,0.02,0.88,0.015
+1h,MiniRocket,yazar,0.819,,0.833,,0.895,
 1h,Naive Bayes,lopo,0.506,0.027,0.165,0.146,0.526,0.061
 1h,Naive Bayes,rastgele,0.504,0.021,0.154,0.052,0.528,0.031
 1h,Naive Bayes,yazar,0.51,,0.124,,0.612,
@@ -13,9 +13,9 @@ pencere,model,bolme,,,,,,
 1h,tsfresh + LightGBM,lopo,0.729,0.113,0.695,0.15,0.807,0.154
 1h,tsfresh + LightGBM,rastgele,0.909,0.009,0.91,0.009,0.966,0.003
 1h,tsfresh + LightGBM,yazar,0.872,,0.877,,0.946,
-30min,MiniRocket,lopo,0.731,0.124,0.732,0.125,0.731,0.124
-30min,MiniRocket,rastgele,0.789,0.014,0.792,0.013,0.789,0.014
-30min,MiniRocket,yazar,0.833,,0.85,,0.833,
+30min,MiniRocket,lopo,0.731,0.124,0.732,0.125,0.795,0.143
+30min,MiniRocket,rastgele,0.789,0.014,0.792,0.013,0.868,0.01
+30min,MiniRocket,yazar,0.833,,0.85,,0.898,
 30min,Naive Bayes,lopo,0.507,0.033,0.183,0.086,0.574,0.066
 30min,Naive Bayes,rastgele,0.503,0.006,0.187,0.008,0.573,0.009
 30min,Naive Bayes,yazar,0.512,,0.176,,0.66,

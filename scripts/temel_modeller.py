@@ -53,14 +53,16 @@ def modeller():
         "Naive Bayes": (lambda: GaussianNB(), "ham"),
         "tsfresh + LightGBM": (lambda: LGBMClassifier(n_estimators=300, learning_rate=0.05, random_state=SEED,
                                                       verbose=-1), "oznitelik"),
-        "MiniRocket": (lambda: MiniRocketClassifier(random_state=SEED), "seri"),
+        "MiniRocket": (lambda: MiniRocketClassifier(random_state=SEED, n_jobs=-1), "seri"),
     }
 
 
 def skor(model, X):
-    if hasattr(model, "predict_proba"):
-        return model.predict_proba(X)[:, 1]
-    return model.decision_function(X)
+    # MiniRocketClassifier içindeki ridge sınıflandırıcının predict_proba'sı 0/1 döndürür;
+    # AUC için sürekli karar değeri gerekir.
+    if isinstance(model, MiniRocketClassifier):
+        return model.pipeline_.decision_function(X)  # dönüşüm + ölçekleme + ridge
+    return model.predict_proba(X)[:, 1]
 
 
 def degerlendir(y, tahmin, olasilik):
