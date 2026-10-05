@@ -1,4 +1,12 @@
 model,karsi,olcut,n_bitki,model_ort,karsi_ort,fark_ort,ga_alt,ga_ust,daha_iyi_bitki,wilcoxon_p
+ECG-FM donmuş (rastgele),tsfresh + LightGBM,dogruluk,12,70.0231,72.8588,-2.8356,-6.25,0.4051,5,0.123
+ECG-FM donmuş (rastgele),tsfresh + LightGBM,auc,12,76.659,80.7115,-4.0525,-8.6372,0.5032,5,0.1099
+ECG-FM donmuş (önceden eğitilmiş),tsfresh + LightGBM,dogruluk,12,64.8148,72.8588,-8.044,-11.5162,-4.2245,2,0.0034
+ECG-FM donmuş (önceden eğitilmiş),tsfresh + LightGBM,auc,12,72.8218,80.7115,-7.8897,-12.1962,-3.4512,1,0.0122
+ECG-FM ince ayar (rastgele),tsfresh + LightGBM,dogruluk,12,70.3704,72.8588,-2.4884,-7.1181,1.794,5,0.4795
+ECG-FM ince ayar (rastgele),tsfresh + LightGBM,auc,12,77.2135,80.7115,-3.4979,-8.9362,1.6004,4,0.3394
+ECG-FM ince ayar (önceden eğitilmiş),tsfresh + LightGBM,dogruluk,12,70.8333,72.8588,-2.0255,-5.5556,1.9097,4,0.4351
+ECG-FM ince ayar (önceden eğitilmiş),tsfresh + LightGBM,auc,12,78.8926,80.7115,-1.8189,-5.5901,2.1574,3,0.3013
 HuBERT donmuş (rastgele),tsfresh + LightGBM,dogruluk,12,68.9236,72.8588,-3.9352,-9.7801,1.2153,5,0.3384
 HuBERT donmuş (rastgele),tsfresh + LightGBM,auc,12,74.4036,80.7115,-6.3079,-12.9825,-0.3183,4,0.1294
 HuBERT donmuş (önceden eğitilmiş),tsfresh + LightGBM,dogruluk,12,70.1389,72.8588,-2.7199,-6.4815,0.9838,2,0.124
@@ -17,3 +25,7 @@ HuBERT ince ayar (önceden eğitilmiş),HuBERT ince ayar (rastgele),dogruluk,12,
 HuBERT ince ayar (önceden eğitilmiş),HuBERT ince ayar (rastgele),auc,12,79.411,77.0351,2.3759,-2.3439,8.0006,5,0.791
 HuBERT donmuş (önceden eğitilmiş),HuBERT donmuş (rastgele),dogruluk,12,70.1389,68.9236,1.2153,-2.0833,4.6296,6,0.6562
 HuBERT donmuş (önceden eğitilmiş),HuBERT donmuş (rastgele),auc,12,78.948,74.4036,4.5444,1.6284,7.7402,9,0.0161
+ECG-FM ince ayar (önceden eğitilmiş),ECG-FM ince ayar (rastgele),dogruluk,12,70.8333,70.3704,0.463,-2.4884,3.4722,7,0.8955
+ECG-FM ince ayar (önceden eğitilmiş),ECG-FM ince ayar (rastgele),auc,12,78.8926,77.2135,1.679,-1.2749,5.0444,9,0.2036
+ECG-FM donmuş (önceden eğitilmiş),ECG-FM donmuş (rastgele),dogruluk,12,64.8148,70.0231,-5.2083,-9.1435,-1.5625,3,0.0576
+ECG-FM donmuş (önceden eğitilmiş),ECG-FM donmuş (rastgele),auc,12,72.8218,76.659,-3.8371,-7.8849,0.3248,3,0.1099

@@ -141,7 +141,32 @@ Karşılaştırma (LOPO): LightGBM %72,9 / AUC %80,7 · MiniRocket %72,5.
 - Çıkarım: bu veri ölçeğinde EKG temel modeli bitki sinyaline **aktarılabiliyor ama üstünlük
   sağlamıyor** (Wahid vd. 2026'nın hipotezine kısmi, olumsuz yönde ilk deneysel kanıt).
 
-## 5. Zaman karıştırıcısı testi
+## 5. ECG-FM (Colab, `notebooks/03_colab_kalan_deneyler.ipynb`, 1 sa, LOPO)
+
+Sonuçlar: `results/colab/ecgfm/sonda_1h.csv` (donmuş), `results/colab/ecgfm/ozet_1h.csv`
+(ince ayar; Drive JSON'larından düz metin okunup `dogruluk × 144` tam sayı kontrolüyle doğrulandı).
+ECG-FM önceden eğitilmiş (90,9 M), girdi 12 × 2 500, ince ayar ayarları HuBERT ile aynı;
+bitki başına ~3,6 dk (T4).
+
+| Deney | Doğruluk | AUC | En iyi epoch (ortanca) |
+|---|---|---|---|
+| ECG-FM ince ayar, önceden eğitilmiş | 70,8 ± 12,5 | 78,9 ± 13,6 | 7,5 |
+| ECG-FM ince ayar, rastgele | 70,4 ± 11,4 | 77,2 ± 13,6 | 9,5 |
+| ECG-FM donmuş, önceden eğitilmiş | 64,8 ± 11,9 | 72,8 ± 13,9 | — |
+| ECG-FM donmuş, rastgele | 70,0 ± 8,7 | 76,7 ± 11,6 | — |
+
+Ön eğitimin etkisi (önceden eğitilmiş − rastgele, eşleştirilmiş, 12 bitki):
+- İnce ayar: doğruluk +0,5 [−2,5; 3,5], p = 0,90 · AUC +1,7 [−1,3; 5,0], p = 0,20
+- Donmuş: doğruluk **−5,2 [−9,1; −1,6]**, p = 0,058 (9/12 bitkide kötü) · AUC −3,8, p = 0,11
+
+LightGBM'e göre ECG-FM ince ayar: doğruluk −2,0 [−5,6; 1,9], p = 0,44 (anlamlı fark yok).
+
+**Yorum:** İkinci ve daha büyük EKG temel modeli de aynı tabloyu veriyor: ince ayarla görülmemiş
+bitkide ~%71, temel modellerle istatistiksel olarak eşdeğer, EKG ön eğitiminin anlamlı katkısı
+yok. Donmuş temsillerde EKG ön eğitimi rastgele özelliklerden kötü → EKG'ye özgü özellikler
+bitki sinyaline uymuyor. Bulgu tek bir modele özgü değil.
+
+## 6. Zaman karıştırıcısı testi
 
 `python scripts/zaman_kontrolu.py` → `zaman_kontrolu_katman.csv`, `zaman_kontrolu_ozet.csv`
 

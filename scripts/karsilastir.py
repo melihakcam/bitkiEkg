@@ -64,6 +64,19 @@ def tablo_olustur(pencere: str) -> pd.DataFrame:
             o = o[o.deney == deney]
             parcalar.append(pd.DataFrame({"model": ad, "bitki": o.bitki, "dogruluk": o.dogruluk, "auc": o.auc}))
 
+    # ECG-FM (Colab, notebooks/03_colab_kalan_deneyler.ipynb): donmuş sonda ve ince ayar
+    ecgfm = PROJECT_ROOT / "results" / "colab" / "ecgfm"
+    adlar_e = {"onceden_egitilmis": "önceden eğitilmiş", "rastgele_baslatilmis": "rastgele"}
+    if pencere == "1h" and (ecgfm / "sonda_1h.csv").exists():
+        s = pd.read_csv(ecgfm / "sonda_1h.csv")
+        s = s[s.bolme == "lopo"]
+        parcalar.append(pd.DataFrame({"model": "ECG-FM donmuş (" + s.model.map(adlar_e) + ")",
+                                      "bitki": s.katman.map(bitki_no), "dogruluk": s.dogruluk, "auc": s.auc}))
+    if pencere == "1h" and (ecgfm / "ozet_1h.csv").exists():
+        o = pd.read_csv(ecgfm / "ozet_1h.csv")
+        parcalar.append(pd.DataFrame({"model": "ECG-FM ince ayar (" + o.deney.map(adlar_e) + ")",
+                                      "bitki": o.bitki, "dogruluk": o.dogruluk, "auc": o.auc}))
+
     return pd.concat(parcalar).pivot_table(index="bitki", columns="model", values=["dogruluk", "auc"])
 
 
@@ -118,7 +131,9 @@ def main():
 
     tablo = tablo_olustur(args.pencere)
     ciftler = [("HuBERT ince ayar (önceden eğitilmiş)", "HuBERT ince ayar (rastgele)"),
-               ("HuBERT donmuş (önceden eğitilmiş)", "HuBERT donmuş (rastgele)")]
+               ("HuBERT donmuş (önceden eğitilmiş)", "HuBERT donmuş (rastgele)"),
+               ("ECG-FM ince ayar (önceden eğitilmiş)", "ECG-FM ince ayar (rastgele)"),
+               ("ECG-FM donmuş (önceden eğitilmiş)", "ECG-FM donmuş (rastgele)")]
     sonuc = karsilastir(tablo, args.referans, ciftler)
     sonuc.round(4).to_csv(get_path("tables") / f"karsilastirma_{args.pencere}.csv", index=False)
     (tablo * 100).round(1).to_csv(get_path("tables") / f"bitki_bazinda_{args.pencere}.csv")
