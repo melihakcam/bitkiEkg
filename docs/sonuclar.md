@@ -166,7 +166,56 @@ bitkide ~%71, temel modellerle istatistiksel olarak eşdeğer, EKG ön eğitimin
 yok. Donmuş temsillerde EKG ön eğitimi rastgele özelliklerden kötü → EKG'ye özgü özellikler
 bitki sinyaline uymuyor. Bulgu tek bir modele özgü değil.
 
-## 6. Zaman karıştırıcısı testi
+## 6. Zaman ölçeği taraması (HuBERT donmuş, LOPO)
+
+`python scripts/olcek_taramasi.py` → `olcek_taramasi_{katman,ozet}.csv`. Eksik son pencereler
+(%1'den fazla boş) çıkarıldı (`scripts/veri_denetimi.py`; 6 sa'te her bitkinin son penceresi
+%34 boş ve "stresli" idi — filtre öncesi 6 sa sonucu %80,6 idi, filtreyle %77,9).
+
+| Pencere | Önceden eğitilmiş | Rastgele | Fark (doğruluk) | Fark (AUC) |
+|---|---|---|---|---|
+| 5 dk (seyreltilmiş) | 67,1 | — | — | — |
+| 30 dk | 69,2 | 68,3 | +0,9 | +3,9 |
+| 1 sa | 70,1 | 68,9 | +1,2 | +4,5 |
+| **6 sa** | **77,9** | **72,8** | **+5,1** | **+8,2** |
+
+6 sa temel modeller (LOPO): LightGBM %81,2 (AUC 86,7) · MiniRocket %76,1 (87,1) ·
+NB %62,7 · kNN %54,3. Rastgele bölmede LightGBM %85,9, yazar bölmesinde %95,7.
+
+## 7. DAPT 2×2 deneyi (6 sa, `notebooks/04_colab_dapt.ipynb`)
+
+DAPT: etiketsiz 4 400 pencere (kontrol domates 572 + sarmaşık 3 828; test edilen 12 bitki yok),
+maskeli yeniden yapılandırma, 10 epoch; kayıp 0,71→0,13 (EKG başlangıç), 0,73→0,20 (rastgele).
+Sonuçlar `results/colab/dapt/` (Drive'dan düz metin, `doğruluk×23` tam sayı kontrolü).
+
+| Kol (LOPO, 12 bitki) | Doğruluk | AUC |
+|---|---|---|
+| tsfresh + LightGBM | **81,2 ± 17,5** | 86,7 |
+| Donmuş, EKG + DAPT | 79,7 ± 10,7 | 87,8 |
+| Donmuş, EKG | 77,9 ± 13,0 | **88,4** |
+| İnce ayar, EKG + DAPT | 76,1 ± 15,9 | 84,3 |
+| MiniRocket | 76,1 ± 16,3 | 87,1 |
+| İnce ayar, EKG | 74,6 ± 13,3 | 84,2 |
+| Donmuş, rastgele + DAPT | 73,2 ± 12,4 | 79,2 |
+| Donmuş, rastgele | 72,8 ± 15,2 | 80,2 |
+| İnce ayar, rastgele + DAPT | 66,3 ± 12,6 | 73,5 |
+| İnce ayar, rastgele | 62,0 ± 7,7 | 72,5 |
+
+Eşleştirilmiş karşılaştırmalar (fark, %95 bootstrap GA, Wilcoxon):
+- **EKG ön eğitiminin etkisi (6 sa):** ince ayar +12,7 [+5,1; +19,9] p = 0,010 (10/12 bitki);
+  ince ayar + DAPT AUC +10,8 [+3,3; +17,9] p = 0,027; donmuş + DAPT +6,5 p = 0,049;
+  donmuş AUC +8,1 p = 0,012 → **EKG ön eğitimi 6 sa ölçekte anlamlı ve tutarlı katkı sağlıyor.**
+- **DAPT'ın etkisi:** EKG + DAPT − EKG: ince ayar +1,4 (p = 0,65), donmuş +1,8 (p = 0,52)
+  → **anlamlı ek katkı yok.**
+- **LightGBM'e göre:** en iyi EKG kolu (donmuş + DAPT) −1,4 [−11,2; +9,4] p = 0,66 → istatistiksel
+  olarak eşdeğer; LightGBM geçilemiyor.
+
+**Sonuç:** İnsan EKG ön eğitimi bitki sinyaline **doğru zaman ölçeğinde (6 sa → 5 s) aktarılıyor**
+ve aynı mimarinin rastgele başlatılmışına göre 5–13 puan kazandırıyor; 30 dk–1 sa ölçeğinde
+bu etki yok. Etiketsiz bitki verisiyle ek uyarlama (DAPT) katkı sağlamıyor. EKG tabanlı modeller
+güçlü öznitelik tabanlı temel modelle eşdeğer, onu geçmiyor (12 bitkiyle ±10 puanlık GA).
+
+## 8. Zaman karıştırıcısı testi
 
 `python scripts/zaman_kontrolu.py` → `zaman_kontrolu_katman.csv`, `zaman_kontrolu_ozet.csv`
 
