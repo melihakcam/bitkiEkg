@@ -1,0 +1,15 @@
+,,,makro_f1,makro_f1,dengeli_dogruluk,dengeli_dogruluk,auc,auc
+,,,mean,std,mean,std,mean,std
+gorev,model,bolme,,,,,,
+gunduz,MiniRocket,lopo,70.6,3.5,70.2,3.2,77.9,2.9
+gunduz,MiniRocket,rastgele,76.1,1.1,75.5,1.2,84.8,0.9
+gunduz,MiniRocket,zaman,71.2,4.0,71.6,3.6,79.8,3.3
+gunduz,Öznitelik + LightGBM,lopo,67.4,2.4,67.1,2.1,74.7,2.0
+gunduz,Öznitelik + LightGBM,rastgele,76.7,1.0,76.1,0.9,85.5,0.6
+gunduz,Öznitelik + LightGBM,zaman,68.4,4.9,68.9,4.6,77.5,5.0
+yagmurlu,MiniRocket,lopo,67.0,5.9,63.1,4.8,83.7,5.6
+yagmurlu,MiniRocket,rastgele,70.4,2.8,65.8,2.6,87.7,2.0
+yagmurlu,MiniRocket,zaman,64.5,5.0,63.3,7.7,82.0,6.0
+yagmurlu,Öznitelik + LightGBM,lopo,65.4,3.8,62.8,3.5,84.3,4.8
+yagmurlu,Öznitelik + LightGBM,rastgele,72.6,1.9,68.3,1.7,89.8,3.1
+yagmurlu,Öznitelik + LightGBM,zaman,66.2,7.0,65.5,8.6,85.8,7.4
