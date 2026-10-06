@@ -132,9 +132,21 @@ EKG temel modelleri: HuBERT-ECG (Coppola vd., 2024; 9,1 M EKG, kendi kendine ö�
 
 Rastgele bölme görülmemiş bitkiye göre 5–18 puan, yazarların 2 bitkilik testi 3–14 puan daha
 yüksek sonuç vermektedir. Yazar bölmesinde LightGBM 1 sa %87,2, yazarların raporu %84,0 →
-boru hattımız yayımlanmış sonucu yeniden üretmektedir. Sarmaşıkta (gündüz/gece, makro F1):
-rastgele %76,7 → bitki-dışarıda-bırak %67,4 → zaman bloğu %68,4 (öznitelik + LightGBM).
-`[SARMAŞIK: MiniRocket ve yağmurlu/kuru sonuçları]`
+boru hattımız yayımlanmış sonucu yeniden üretmektedir.
+
+Sarmaşıkta (ikinci tür, dış ortam; makro F1, 1 sa pencere, 2 kanal):
+
+| Görev | Model | Rastgele | Bitki-dışarıda-bırak | Zaman bloğu |
+|---|---|---|---|---|
+| Gündüz/gece | Öznitelik + LightGBM | 76,7 | 67,4 | 68,4 |
+| Gündüz/gece | MiniRocket | 76,1 | 70,6 | 71,2 |
+| Yağmurlu/kuru | Öznitelik + LightGBM | 72,6 | 65,4 | 66,2 |
+| Yağmurlu/kuru | MiniRocket | 70,4 | 67,0 | 64,5 |
+
+Rastgele bölme, görülmemiş bitkiye göre 3–9, gelecek zaman bloğuna göre 4–8 puan iyimserdir; şişme
+ikinci türde ve dış ortamda da görülmektedir. Yazarların %93–95'lik makro F1 değerleri (700+
+tsfresh özniteliği, SMOTE, rastgele bölme) bizim rastgele bölme sonuçlarımızdan yüksektir; ancak
+bizim 18 özetleyici özniteliğimizle bile rastgele → LOPO düşüşü tutarlıdır.
 
 ### 4.2 Uygun olmayan modeller
 kNN ve Naive Bayes LOPO'da şans düzeyindedir (1 sa: %50,5 ve %50,6; LightGBM'den 22 puan düşük,

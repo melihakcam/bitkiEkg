@@ -215,7 +215,23 @@ ve aynı mimarinin rastgele başlatılmışına göre 5–13 puan kazandırıyor
 bu etki yok. Etiketsiz bitki verisiyle ek uyarlama (DAPT) katkı sağlamıyor. EKG tabanlı modeller
 güçlü öznitelik tabanlı temel modelle eşdeğer, onu geçmiyor (12 bitkiyle ±10 puanlık GA).
 
-## 8. Zaman karıştırıcısı testi
+## 8. Sarmaşık: değerlendirme yöntemine göre şişme (ikinci tür)
+
+`python scripts/sarmasik_sizinti.py` → `sarmasik_sizinti_{katman,ozet}.csv` (v2: bitki ve kanal
+başına z-skor, 10 sn seyreltme). v1 (pencere başına z-skor, seviye bilgisini sildiği için
+geçersiz): `sarmasik_sizinti_v1_pencere_z_*.csv`. 6 089 saatlik pencere, 4 bitki, 2 kanal.
+
+| Görev | Model | Rastgele | LOPO | Zaman bloğu | AUC (rastgele / LOPO) |
+|---|---|---|---|---|---|
+| Gündüz/gece | Öznitelik + LightGBM | 76,7 | 67,4 | 68,4 | 85,5 / 74,7 |
+| Gündüz/gece | MiniRocket | 76,1 | 70,6 | 71,2 | 84,8 / 77,9 |
+| Yağmurlu/kuru | Öznitelik + LightGBM | 72,6 | 65,4 | 66,2 | 89,8 / 84,3 |
+| Yağmurlu/kuru | MiniRocket | 70,4 | 67,0 | 64,5 | 87,7 / 83,7 |
+
+(makro F1, %). Rastgele bölme LOPO'ya göre 3–9 puan, zaman bloğuna göre 4–8 puan iyimser → şişme
+bulgusu ikinci türde ve dış ortamda da geçerli.
+
+## 9. Zaman karıştırıcısı testi
 
 `python scripts/zaman_kontrolu.py` → `zaman_kontrolu_katman.csv`, `zaman_kontrolu_ozet.csv`
 
