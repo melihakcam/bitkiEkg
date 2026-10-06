@@ -2,6 +2,9 @@
 # Yerelde CPU ile test edilen sürümler: torch 2.14.1+cpu, transformers 4.57.6.
 # Yerel CPU kurulumu:
 #   pip install torch --index-url https://download.pytorch.org/whl/cpu
+# Not (2026-10-06): Windows Akıllı Uygulama Denetimi torch_python.dll'i engellemeye başladı;
+# torch kuruluyken aeon (MiniRocket) içe aktarımı da çöküyor. Bu yüzden ana ortamdan torch
+# kaldırıldı; EKG modeli deneyleri Colab'da çalışır.
 # Colab'da torch hazır gelir; yalnızca aşağıdakiler kurulur.
 transformers>=4.40,<5
 safetensors
