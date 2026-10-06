@@ -1,7 +1,7 @@
 # Yol Haritası
 
 Durum işaretleri: ✅ bitti · 🟡 kısmen · ⏳ sıradaki · ⬜ bekliyor
-Son güncelleme: 2026-10-02
+Son güncelleme: 2026-10-06
 
 ## Aşama 0 — Altyapı ✅
 - ✅ Klasör yapısı, README, .gitignore, requirements, config
@@ -59,17 +59,23 @@ Son güncelleme: 2026-10-02
 - ✅ Zaman karıştırıcısı testi: kontrol bitkilerinde 30 dk'da şans düzeyi
 - ⬜ MiniRocket AUC düzeltmesi ve hızlandırma (n_jobs, dönüşüm önbelleği)
 
-## Aşama 6 — Derin ve transfer modeller ⬜ (Colab/Kaggle)
-- ⬜ InceptionTime
-- ⬜ HuBERT-ECG, ECG-FM: doğrusal sonda + tam ince ayar
-- ⬜ Aynı mimariler rastgele başlatılmış (kontrol)
-- ⬜ Ablasyonlar: pencere süresi, kanal eşleme
+## Aşama 6 — Derin ve transfer modeller ✅ (Colab)
+- ✅ MiniRocket (InceptionTime yerine)
+- ✅ HuBERT-ECG, ECG-FM: donmuş sonda + ince ayar (1 sa)
+- ✅ Aynı mimariler rastgele başlatılmış (kontrol)
+- ✅ Ablasyon: pencere süresi (5 dk – 6 sa) ve kanal eşleme (tekrar/parça)
+- ✅ DAPT 2×2 (6 sa): EKG ön eğitimi anlamlı (+12,7, p = 0,010), DAPT ek katkı yok
 
-## Aşama 7 — Genelleme ve raporlama ⬜
-- ⬜ Rastgele bölme vs bitki bazlı bölme farkı
-- ⬜ Domates → sarmaşık, sarmaşık → domates
-- ⬜ Literatürle karşılaştırma, görselleştirme
-- ⬜ Faz 2 makale formatında rapor, sunum
+## Aşama 7 — Genelleme ve raporlama 🟡
+- ✅ Rastgele bölme vs bitki bazlı bölme farkı (domates + sarmaşık)
+- ⬜ Domates → sarmaşık aktarımı: ortak etiket olmadığından yapılamıyor; yerine ikinci türde şişme testi
+- 🟡 Literatürle karşılaştırma, görselleştirme
+- 🟡 Makale taslağı (`reports/faz2/makale_taslak.md`); özet: `reports/ilerleme_raporu.md`
+
+## Aşama 8 — Q1 makale ⏳
+- ⬜ Frekans örtüşmesi analizi, hibrit model, öznitelik önemi, zor bitkiler (yerel)
+- ⬜ Başka ön eğitimli modellerle karşılaştırma, ek ölçekler, tohum tekrarı (Colab)
+- ⬜ İngilizce makale + grafikler
 
 ## Açık kararlar
 - ~~Öneride 10 Hz yazıyor~~ → cihaz 10 Hz, veri seti 1 Hz; raporda ikisi de belirtildi
