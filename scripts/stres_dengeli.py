@@ -11,7 +11,7 @@ Gerçek stres sinyali varsa sulama bitkilerinde Δ büyük, kontrol bitkilerinde
   - cihaz düzeyinde kesin permütasyon: hangi 2 cihazın kontrol olduğu 28 biçimde değiştirilir,
     model her seferinde yeniden eğitilir (en küçük p = 1/28 ≈ 0,036)
 
-Kullanım: python scripts/stres_dengeli.py [--pencere 6h 1h]
+Kullanım: python scripts/stres_dengeli.py [--pencere 6h 1h] | --ekg
 """
 
 import argparse
@@ -21,9 +21,12 @@ import numpy as np
 import pandas as pd
 from lightgbm import LGBMClassifier
 from scipy.stats import mannwhitneyu
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
-from bitki_ekg.config import get_path, set_seed
+from bitki_ekg.config import PROJECT_ROOT, get_path, set_seed
 from bitki_ekg.preprocessing import KONTROL_BITKILERI, domates_pencereler
 from bitki_ekg.zaman_testleri import cihaz
 from temel_modeller import tsfresh_oznitelikleri
@@ -37,14 +40,20 @@ def model():
                           random_state=SEED, verbose=-1)
 
 
-def deltalar(F, son, bitki, kontrol_cihazlari) -> pd.DataFrame:
+def ekg_sonda():
+    """Donmuş EKG gömmeleri için doğrusal sonda (notebooks/05 ile aynı, sınıf ağırlıklı)."""
+    return make_pipeline(StandardScaler(), LogisticRegression(C=1.0, max_iter=5000, class_weight="balanced",
+                                                              random_state=SEED))
+
+
+def deltalar(F, son, bitki, kontrol_cihazlari, model_fn=model) -> pd.DataFrame:
     cih = cihaz(bitki)
     sulama = ~np.isin(cih, kontrol_cihazlari)
     y = (sulama & (son == 1)).astype(int)
     skor = np.empty(len(y))
     for c in np.unique(cih):
         tr, te = cih != c, cih == c
-        skor[te] = model().fit(F[tr], y[tr]).predict_proba(F[te])[:, 1]
+        skor[te] = model_fn().fit(F[tr], y[tr]).predict_proba(F[te])[:, 1]
     satir = []
     for b in np.unique(bitki):
         m = bitki == b
@@ -62,9 +71,25 @@ def calistir(pencere: str) -> tuple[pd.DataFrame, dict]:
     F = tsfresh_oznitelikleri(pencere, meta)[secim]
     son = gun[secim].isin(SON_GUNLER).to_numpy(int)
     bitki = meta.plant_id.to_numpy()[secim]
+    return degerlendir(F, son, bitki, pencere, model)
+
+
+def calistir_ekg() -> tuple[pd.DataFrame, dict]:
+    """HuBERT-ECG donmuş gömmeleri (6 sa), notebooks/05 adım 4 çıktısı (Drive'dan indirildi)."""
+    g = np.load(get_path("processed") / "gomme_ekg_6h_asama1.npz")
+    z = np.load(PROJECT_ROOT / "data" / "colab" / "domates_ikili_6h_500.npz")
+    k = np.load(PROJECT_ROOT / "data" / "colab" / "domates_kontrol_6h_500.npz")
+    F = np.vstack([g["E"], g["Ec"]])
+    son = np.concatenate([z["y"], k["y"]]).astype(int)
+    bitki = np.concatenate([z["bitki"], k["bitki"]]).astype(int)
+    return degerlendir(F, son, bitki, "6h_ekg", ekg_sonda)
+
+
+def degerlendir(F, son, bitki, pencere, model_fn) -> tuple[pd.DataFrame, dict]:
+    secim = np.ones(len(son), dtype=bool)
     gercek = tuple(np.unique(cihaz(np.array(KONTROL_BITKILERI))))
 
-    d = deltalar(F, son, bitki, gercek)
+    d = deltalar(F, son, bitki, gercek, model_fn)
     fark = d[d.sulama].delta.mean() - d[~d.sulama].delta.mean()
     p_mw = mannwhitneyu(d[d.sulama].delta, d[~d.sulama].delta, alternative="greater").pvalue
 
@@ -72,7 +97,7 @@ def calistir(pencere: str) -> tuple[pd.DataFrame, dict]:
     for kc in combinations(np.unique(cihaz(bitki)), 2):
         if tuple(sorted(kc)) == gercek:
             continue
-        dp = deltalar(F, son, bitki, kc)
+        dp = deltalar(F, son, bitki, kc, model_fn)
         print(f"  [{pencere}] permütasyon {len(sifir) + 1}/27", flush=True)
         sifir.append(dp[dp.sulama].delta.mean() - dp[~dp.sulama].delta.mean())
     sifir = np.array(sifir)
@@ -91,7 +116,13 @@ def calistir(pencere: str) -> tuple[pd.DataFrame, dict]:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--pencere", nargs="+", default=["6h", "1h"])
+    ap.add_argument("--ekg", action="store_true", help="yalnızca EKG gömmeleriyle (6 sa)")
     args = ap.parse_args()
+    if args.ekg:
+        d, o = calistir_ekg()
+        d.to_csv(get_path("tables") / "stres_dengeli_ekg_bitki.csv", index=False)
+        pd.DataFrame([o]).to_csv(get_path("tables") / "stres_dengeli_ekg_ozet.csv", index=False)
+        return
     sonuc = [calistir(p) for p in args.pencere]
     pd.concat([s[0] for s in sonuc]).to_csv(get_path("tables") / "stres_dengeli_bitki.csv", index=False)
     pd.DataFrame([s[1] for s in sonuc]).to_csv(get_path("tables") / "stres_dengeli_ozet.csv", index=False)
