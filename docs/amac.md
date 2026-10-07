@@ -99,7 +99,7 @@ henüz okunmadı; makalede alıntılamadan önce okunacak.
 
 | Çalışma | Ne yapmışlar | Bizden farkı | Dosya |
 |---|---|---|---|
-| González i Juclà vd. 2023 (Sci Rep) | Azot eksikliği, Encoder, %99 | Görülmemiş bitki testi yok | ✅ `benzer/Gonzalez2023_SciRep_Azot.pdf` |
+| González i Juclà vd. 2023 (Sci Rep) | Azot eksikliği, 16 bitki, ham sinyal + derin öğrenme; **LOOCV %77,0 ± 12,1**, ardışık tahmin birleştirmeyle %87,6 | Bitki bazlı test yapmışlar (bkz. `docs/makale_incelemesi.md`); EKG modeli yok, rastgele bölmeyle karşılaştırma yok | ✅ `benzer/Gonzalez2023_SciRep_Azot.pdf` |
 | Qi vd. 2024 (Biosens. Bioelectron.) | Toprak nemi | Farklı sensör/görev | ⬜ |
 | Biosens. Bioelectron. 2025 (PMID 39708493) | Mikro-iğne sensör | Donanım odaklı | ⬜ |
 | Qi vd. 2026 (Physiologia Plantarum) | Alkali stres | Ön eğitimli model yok | ⬜ |
