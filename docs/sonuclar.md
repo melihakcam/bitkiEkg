@@ -253,3 +253,43 @@ bitki 6 %84 / %76 · bitki 7 %42 / %40.
 - Sonuç: **sinyalin ana kaynağı sulama stresi, ancak zaman etkisi sıfır değil.** Yalnızca 4
   kontrol bitkisi olduğundan istatistiksel güç düşük; bu bir kısıt olarak raporlanmalı.
 - Bu test Buss vd. (2026)'da yapılmamış → makaleye özgün katkı.
+
+## 10. Aşama 1: tekrar ve zaman karıştırıcısı testleri (6 sa, 2026-10-07)
+
+Not defterleri: `notebooks/05_colab_asama1.ipynb`, `notebooks/06_colab_zaman_testleri.ipynb`;
+yerel: `scripts/zaman_kontrolu.py`, `scripts/zaman_testleri.py` (`src/bitki_ekg/zaman_testleri.py`).
+Sonuçlar: `results/colab/asama1/`, `results/tables/zaman_*`.
+
+### 10.1 Tekrar (5 farklı başlangıç; ince ayar, LOPO, 12 bitki)
+| Kol | Doğruluk | AUC | Tek sınıfa çöken bitki (60 katman) |
+|---|---|---|---|
+| EKG ağırlıkları | 77,0 (74,3–79,7) | 85,7 | 1 |
+| Rastgele ağırlıklar | 63,9 (60,1–67,0) | 69,5 | 1 |
+
+EKG − rastgele (bitki başına 5 tekrar ortalaması): doğruluk **+13,1, p = 0,0024 (10/12 bitki)**;
+AUC **+16,1, p = 0,0010 (11/12)**. Fark 5 tekrarın hepsinde pozitif (+8,7 … +17,4). Donmuşta da
+EKG (77,9 / AUC 88,4) 5 rastgele başlangıcın hepsinden iyi (63,0–71,7 / 68,9–74,9).
+→ **EKG ön eğitiminin etkisi şans değil.**
+
+### 10.2 Zaman karıştırıcısı testleri
+| Test (olması gereken) | LightGBM | EKG donmuş | Rastgele donmuş (5 ort.) |
+|---|---|---|---|
+| Kontrol bitkisi ilk/son gün, AUC (~0,5) | 0,76 (4/4 bitki > 0,5) | **0,95** (4/4, hepsi p < 0,001) | 0,76 |
+| Stres modeli → kontrol bitkisi, AUC (~0,5) | 0,81 (4/4) | **0,82** (4/4, hepsi p ≤ 0,02) | 0,83 |
+| Son 3 gün sulama/kontrol grubu, cihaz permütasyon p | 0,036 | 0,25 | 0,20 |
+| İlk 3 gün (tedavi öncesi, plasebo), p | 0,071 | 0,29 | 0,92 |
+| Kendi başlangıcına göre fark, p | 0,29 | 0,57 | 0,74 |
+
+(Cihaz-dışarıda-bırak; 8 cihaz, kontrol bitkileri yalnızca PN8/PN9 → C(8,2) = 28 permütasyon, en
+küçük p = 0,036. LODO'da havuzlanmış AUC aşağı yanlı olduğundan karşılaştırma permütasyon p ile yapılır.)
+
+**Sonuç:**
+1. Tüm modellerin "stres" kararı büyük ölçüde **deneyin başı/sonu farkından** (zaman: elektrot,
+   bitki gelişimi, sera koşulları) geliyor: stres modeli hiç stres görmemiş bitkilerin son günlerine
+   de "stresli" diyor (AUC ~0,82, 4/4 bitki, anlamlı).
+2. Zaman ve cihaz etkisi ayıklandığında (aynı gün, fark testleri) **hiçbir model stres sinyali
+   gösteremiyor** (EKG p = 0,25 / 0,57). Sınır: yalnızca 2 kontrol cihazı → güç düşük.
+3. EKG ön eğitimi bu yavaş zamansal değişimi rastgele modelden çok daha iyi yakalıyor
+   (kontrol AUC 0,95 / 0,76). Yani aktarılan bilgi gerçek, ama bu veride stresle değil zamanla ilgili.
+4. Yazarların etiketi (ilk 3 gün sağlıklı / son 3 gün stresli) bu karıştırıcıyı içeriyor; rastgele
+   bölme ve LOPO bunu yakalayamıyor.
