@@ -188,3 +188,17 @@ Meta sütunlar: `plant_id, node, day, datetime_start, datetime_end, class`.
 - `classification_results.xlsx`: bu sonuçların ham tabloları (DA-BioPot, DA-Imp, DL-2/3/5classes).
 - `soil_moisture` sütunu önemli: aynı laboratuvarın (Buss/Hamann) cihazı domates verisinde de
   kullanıldıysa su stresi etiketi toprak nemiyle doğrulanabilir.
+
+### Domates grup eşlemesi (2026-10-07)
+Kaynak: Buss vd., Zenodo 22081982 (2026-08-24 sürümü) `All_Plants_smoothed.png` alt grafik başlıkları;
+dosya `data/raw/domates_v2/`. Aynı grafikte toprak nemi eğrileri de var (ham değerleri paylaşılmamış).
+
+| Grup | Cihaz | plant_id |
+|---|---|---|
+| Aşırı sulanmış | PN2, PN5 | 0, 1, 2, 3 |
+| Kontrol 400 mL | PN8, PN9 | 4, 5, 6, 7 |
+| Orta kuraklık 200 mL | PN10, PN11 | 8, 9, 10, 11 |
+| Şiddetli kuraklık 100 mL | PN12, PN16 | 12, 13, 14, 15 |
+
+Her grup tam olarak 2 cihaz → grup ile cihaz birebir çakışıyor (cihaz düzeyinde değerlendirme şart).
+Kuraklık gruplarında toprak nemi 9–11.06'dan itibaren düşüyor; aşırı sulamada ~%100 sabit.
