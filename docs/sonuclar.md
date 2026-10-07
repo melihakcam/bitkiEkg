@@ -293,3 +293,26 @@ küçük p = 0,036. LODO'da havuzlanmış AUC aşağı yanlı olduğundan karş�
    (kontrol AUC 0,95 / 0,76). Yani aktarılan bilgi gerçek, ama bu veride stresle değil zamanla ilgili.
 4. Yazarların etiketi (ilk 3 gün sağlıklı / son 3 gün stresli) bu karıştırıcıyı içeriyor; rastgele
    bölme ve LOPO bunu yakalayamıyor.
+
+## 11. Doz-etki testi (2026-10-07)
+
+`python scripts/doz_etki.py` → `results/tables/doz_etki*_{bitki,ozet}.csv`. Grup eşlemesi: docs/veri_notlari.md.
+Zamana karşı dengelenmiş eğitim (kontrol son günleri = sağlıklı), cihaz-dışarıda-bırak; model dozu görmez.
+İstatistik: kontrol < 200 mL < 100 mL sırası ile bitki Δ'sı (son 3 gün − ilk 3 gün skor) arasında Spearman r;
+cihaz düzeyinde 90 atama, her birinde yeniden eğitim (en küçük p = 0,011).
+
+| Model (6 sa) | r | p (cihaz perm.) | Δ kontrol | Δ 200 mL | Δ 100 mL | Δ aşırı sulama |
+|---|---|---|---|---|---|---|
+| **HuBERT-ECG donmuş (EKG ağırlıkları)** | **0,65** | **0,011** | 0,30 | 0,29 | **0,59** | 0,51 |
+| Aynı model, rastgele ağırlık t1 | 0,18 | 0,26 | 0,28 | 0,18 | 0,33 | 0,44 |
+| t2 | −0,44 | 0,82 | 0,34 | 0,07 | 0,21 | 0,31 |
+| t3 | 0,03 | 0,36 | 0,32 | 0,09 | 0,34 | 0,51 |
+| t4 | −0,38 | 0,80 | 0,37 | 0,02 | 0,22 | 0,30 |
+| t5 | −0,18 | 0,57 | 0,35 | 0,15 | 0,27 | 0,30 |
+| tsfresh + LightGBM | 0,15 | 0,29 | 0,14 | 0,33 | 0,28 | 0,39 |
+
+**Sonuç:** Doz-etki ilişkisi (daha az su → daha yüksek stres skoru) yalnızca EKG ön eğitimli modelde var ve
+olası en küçük p değerine ulaşıyor; aynı mimarinin 5 rastgele başlangıcının hiçbirinde ve LightGBM'de yok.
+→ Zamandan bağımsız stres bilgisini çıkaran şey EKG ön eğitimi.
+Sınırlar: test, grup eşlemesi bulunduktan sonra tasarlandı (keşif); etkiyi esas olarak 100 mL grubu taşıyor
+(200 mL ≈ kontrol). Doğrulama için önceden kayıtlı testler: docs/on_kayit.md.

@@ -9,7 +9,7 @@ Model eğitimde dozu görmez (tüm sulama bitkilerinin son günleri aynı "1" et
 kontrol etiketleri değişeceğinden model YENİDEN eğitilir; aşırı sulama cihazları sabit kalır.
 En küçük olası p = 1/90 ≈ 0,011.
 
-Kullanım: python scripts/doz_etki.py [--model ekg lightgbm]
+Kullanım: python scripts/doz_etki.py [--model ekg lightgbm rastgele_t1 ... rastgele_t5] [--cikti ek]
 """
 
 import argparse
@@ -32,8 +32,8 @@ DOZ = {"kontrol": 0, "200": 1, "100": 2}
 
 
 def veri(ad):
-    if ad == "ekg":
-        g = np.load(get_path("processed") / "gomme_ekg_6h_asama1.npz")
+    if ad.startswith(("ekg", "rastgele")):  # donmuş gömmeler: notebooks/05 adım 4 (Drive'dan indirildi)
+        g = np.load(get_path("processed") / f"gomme_{ad}_6h_asama1.npz")
         z = np.load(PROJECT_ROOT / "data" / "colab" / "domates_ikili_6h_500.npz")
         k = np.load(PROJECT_ROOT / "data" / "colab" / "domates_kontrol_6h_500.npz")
         return (np.vstack([g["E"], g["Ec"]]), np.concatenate([z["y"], k["y"]]).astype(int),
@@ -77,9 +77,11 @@ def calistir(ad):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", nargs="+", default=["ekg", "lightgbm"])
-    sonuc = [calistir(m) for m in ap.parse_args().model]
-    pd.concat([s[0] for s in sonuc]).to_csv(get_path("tables") / "doz_etki_bitki.csv", index=False)
-    pd.DataFrame([s[1] for s in sonuc]).to_csv(get_path("tables") / "doz_etki_ozet.csv", index=False)
+    ap.add_argument("--cikti", default="", help="çıktı dosya adı eki (ör. _rastgele)")
+    args = ap.parse_args()
+    sonuc = [calistir(m) for m in args.model]
+    pd.concat([s[0] for s in sonuc]).to_csv(get_path("tables") / f"doz_etki{args.cikti}_bitki.csv", index=False)
+    pd.DataFrame([s[1] for s in sonuc]).to_csv(get_path("tables") / f"doz_etki{args.cikti}_ozet.csv", index=False)
 
 
 if __name__ == "__main__":
