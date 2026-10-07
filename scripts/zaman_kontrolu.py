@@ -11,6 +11,10 @@ olarak etiketlenir ve aynı model (tsfresh + LightGBM) bitki-dışarıda-bırak 
     zamandan kaynaklanıyor olabilir.
 Karşılaştırma için aynı model sulama bitkilerinde (12 bitki) de çalıştırılır.
 
+Aktarım testi (daha doğrudan): stres modeli 12 sulama bitkisinin tamamında eğitilir ve kontrol
+bitkilerinin ilk/son günlerine uygulanır. Model kontrolün son günlerine de "stresli" diyorsa
+(AUC > 0,5), stres kararının bir kısmı zamandan geliyor demektir.
+
 Kullanım: python scripts/zaman_kontrolu.py [--pencere 1h 30min]
 """
 
@@ -29,12 +33,16 @@ ILK_GUNLER = ("2025-06-04", "2025-06-05", "2025-06-06")
 SON_GUNLER = ("2025-06-19", "2025-06-20", "2025-06-21")
 
 
-def etiketle(meta: pd.DataFrame, grup: str) -> tuple[np.ndarray, np.ndarray]:
-    """Grubun ilk/son 3 gün pencereleri için maske ve etiket (0 = ilk, 1 = son)."""
+def etiketle(meta: pd.DataFrame, grup: str, X_ham: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Grubun ilk/son 3 gün pencereleri için maske ve etiket (0 = ilk, 1 = son).
+
+    %1'den fazla eksik pencereler çıkarılır (ikili görevle aynı kural, preprocessing.ikili_gorev).
+    """
     kontrol = meta.plant_id.isin(KONTROL_BITKILERI)
     bitki = kontrol if grup == "kontrol" else ~kontrol
     gun = meta.day.astype(str)
     maske = (bitki & (gun.isin(ILK_GUNLER) | gun.isin(SON_GUNLER))).to_numpy()
+    maske &= np.isnan(X_ham).mean(axis=1) <= 0.01
     y = gun[maske].isin(SON_GUNLER).astype(int).to_numpy()
     return maske, y
 
@@ -42,11 +50,11 @@ def etiketle(meta: pd.DataFrame, grup: str) -> tuple[np.ndarray, np.ndarray]:
 def calistir(pencere: str) -> list[dict]:
     from temel_modeller import tsfresh_oznitelikleri  # aynı öznitelik hizalaması
 
-    _, meta = domates_pencereler(pencere)
+    X_ham, meta = domates_pencereler(pencere)
     F = tsfresh_oznitelikleri(pencere, meta)
     satirlar = []
     for grup in ("kontrol", "sulama"):
-        maske, y = etiketle(meta, grup)
+        maske, y = etiketle(meta, grup, X_ham)
         X, gruplar = F[maske], meta.plant_id.to_numpy()[maske]
         for g, tr, te in lopo_bolmeleri(gruplar):
             model = LGBMClassifier(n_estimators=300, learning_rate=0.05, random_state=SEED, verbose=-1)
@@ -56,12 +64,27 @@ def calistir(pencere: str) -> list[dict]:
                              "dogruluk": accuracy_score(y[te], p), "f1": f1_score(y[te], p),
                              "auc": roc_auc_score(y[te], s)})
         print(f"[{pencere}] {grup}: {len(np.unique(gruplar))} bitki, {maske.sum()} pencere")
+
+    # Aktarım: sulama bitkilerinde eğitilen stres modeli → kontrol bitkileri
+    m_s, y_s = etiketle(meta, "sulama", X_ham)
+    m_k, y_k = etiketle(meta, "kontrol", X_ham)
+    model = LGBMClassifier(n_estimators=300, learning_rate=0.05, random_state=SEED, verbose=-1)
+    model.fit(F[m_s], y_s)
+    s_k = model.predict_proba(F[m_k])[:, 1]
+    g_k = meta.plant_id.to_numpy()[m_k]
+    for g in np.unique(g_k):
+        b = g_k == g
+        satirlar.append({"pencere": pencere, "grup": "aktarim", "bitki": int(g), "n": int(b.sum()),
+                         "dogruluk": accuracy_score(y_k[b], s_k[b] >= 0.5), "f1": f1_score(y_k[b], s_k[b] >= 0.5),
+                         "auc": roc_auc_score(y_k[b], s_k[b]),
+                         "stresli_orani_ilk": float((s_k[b][y_k[b] == 0] >= 0.5).mean()),
+                         "stresli_orani_son": float((s_k[b][y_k[b] == 1] >= 0.5).mean())})
     return satirlar
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--pencere", nargs="+", default=["1h", "30min"])
+    ap.add_argument("--pencere", nargs="+", default=["6h", "1h", "30min"])
     args = ap.parse_args()
 
     df = pd.DataFrame([s for p in args.pencere for s in calistir(p)])
