@@ -50,3 +50,12 @@ aşırı PN2, PN5 · kontrol 400 mL PN8, PN9 · 200 mL PN10, PN11 · 100 mL PN12
 - Grup başına 2 cihaz: cihaz düzeyinde 90 atanış, güç düşük.
 - 100 mL cihazları tedavi öncesinde de ham sinyalde daha çok kayıyor (docs/sonuclar.md §12);
   Δ sabit farkı siler ama cihaza özgü kaymayı silmez. Plasebo testi bunu kısmen yakalar.
+
+## Ek 1 — ECG-FM ile tekrar (2026-10-08, ECG-FM gömmeleri çıkarılmadan önce yazıldı)
+HuBERT-ECG sonucu (docs/sonuclar.md §15) görüldükten sonra, **ikinci bir EKG temel modeliyle** aynı test
+hiçbir ayar değiştirilmeden tekrarlanır.
+- Gömmeler: `ecgfm_gomme` (son katmanın zaman ortalaması, 768 boyut); girdi `ecgfm_girdisi(L)` —
+  HuBERT'e verilen aynı 500 örneklik pencereler (aynı bilgi), 2 500 örneğe yeniden örneklenip 12 kanala kopyalanır.
+- Kollar: `ecgfm` (ön eğitimli) ve `ecgfm_rastgele_t1…t5` (`ecgfm_yukle(False, tohum)`, tohum 1–5).
+- Yöntem, dönemler, sonda, permütasyon ve **üç başarı ölçütü** yukarıdakiyle birebir aynı.
+- Not: ECG-FM 1 sa pencerede etkisizdi (§5); başarısız sonuç da aynen raporlanır.
