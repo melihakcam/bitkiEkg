@@ -111,10 +111,14 @@ def main():
                 grup = np.array([CIHAZ_GRUP[c] for c in cihaz(bitki)])
                 e = pd.DataFrame({"gun": gun, "grup": grup, "skor": skor}).groupby(["gun", "grup"]).skor.mean().unstack()
                 egriler.append(e.assign(model=kol))
-    ek = "" if kollar == KOLLAR else "_" + "_".join(kollar)
-    pd.DataFrame(ozetler).to_csv(get_path("tables") / f"ayrisma_ozet{ek}.csv", index=False)
-    pd.concat(tablolar).to_csv(get_path("tables") / f"ayrisma_bitki{ek}.csv", index=False)
-    pd.concat(egriler).to_csv(get_path("tables") / f"ayrisma_gunluk{ek}.csv")
+    # Tüm kollar tek dosyada: bu çalıştırmanın kollarına ait eski satırlar yenileriyle değiştirilir.
+    for ad, yeni, indeks in [("ozet", pd.DataFrame(ozetler), False), ("bitki", pd.concat(tablolar), False),
+                             ("gunluk", pd.concat(egriler), True)]:
+        dosya = get_path("tables") / f"ayrisma_{ad}.csv"
+        if dosya.exists():
+            eski = pd.read_csv(dosya, index_col=0 if indeks else None)
+            yeni = pd.concat([eski[~eski.model.isin(kollar)], yeni])
+        yeni.to_csv(dosya, index=indeks)
 
 
 if __name__ == "__main__":

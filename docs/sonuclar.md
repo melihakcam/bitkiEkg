@@ -395,7 +395,7 @@ suçlama olarak yazılmaz — önce makale okunmalı, gerekirse yazarlara sorulm
 Ön kayıt: `docs/on_kayit.md` (commit a8299fb, gömmeler çıkarılmadan önce GitHub'a gönderildi).
 Gömmeler: `notebooks/07_colab_18gun.ipynb` (T4) → `data/processed/gomme_<kol>_18gun.npz`.
 Tutarlılık: 368 ortak pencerede yeni EKG gömmeleri Aşama 1 gömmeleriyle aynı (en büyük fark 2,4e-7).
-Analiz: `python scripts/ayrisma_testi.py` → `results/tables/ayrisma_{ozet,bitki,gunluk}_<kol>.csv`.
+Analiz: `python scripts/ayrisma_testi.py` → `results/tables/ayrisma_{ozet,bitki,gunluk}.csv` (tüm kollar tek dosyada).
 Eğitim yalnızca P1 (14–21.06) günlerinde susuz (200+100 mL) vs kontrol; cihaz-dışarıda-bırak;
 Δ = skor(P1) − skor(P0 = 04–08.06); doz sırası ile Spearman r; 90 cihaz atanışı, her birinde yeniden eğitim.
 
