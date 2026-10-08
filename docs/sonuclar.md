@@ -407,7 +407,7 @@ Eğitim yalnızca P1 (14–21.06) günlerinde susuz (200+100 mL) vs kontrol; cih
 | Rastgele t3 | 0,27 | 0,16 | 0,03 | 0,44 | −0,05 | −0,02 | 0,01 |
 | Rastgele t4 | −0,06 | 0,54 | 0,53 | **0,044** | −0,08 | −0,03 | −0,10 |
 | Rastgele t5 | −0,44 | 0,88 | 0,44 | 0,14 | −0,03 | −0,03 | −0,11 |
-| tsfresh + LightGBM | (çalışıyor) | | | | | | |
+| tsfresh + LightGBM | 0,30 | 0,30 | 0,18 | 0,36 | 0,04 | 0,44 | 0,19 |
 
 **Ön kayıtlı ölçütler (EKG):** r > 0 ve p < 0,05 ✔ · plasebo anlamsız ✔ · r > 5 rastgele kolun hepsi ✔ → **sağlandı.**
 
@@ -421,3 +421,19 @@ Günlük eğri (EKG, 100 mL − kontrol ortalama skor): 04–12.06 arası −0,2
   plasebo etkisi yok, sonra-dönem etkisi var. Yorum: EKG temsili cihaz kaymasına daha az duyarlı ve tedaviden
   sonra beliren farkı yakalıyor — ama cihaza özgü, zamanla artan bir kayma bu testle tamamen dışlanamaz.
 - Veri §11 ile örtüşüyor (aynı bitkiler, aynı gömme modeli); bağımsız tekrar değil, daha sıkı bir tasarım.
+
+### 15a. Ön kayıt Ek 1 — ECG-FM ile tekrar (2026-10-08)
+`notebooks/08_colab_18gun_ecgfm.ipynb` → `gomme_ecgfm*_18gun.npz`; aynı betik, aynı ölçütler.
+
+| Kol | Ana r | Ana p | Plasebo r | Plasebo p | Δ kontrol | Δ 200 | Δ 100 |
+|---|---|---|---|---|---|---|---|
+| **ECG-FM (ön eğitimli)** | 0,15 | 0,33 | 0,09 | 0,44 | 0,02 | 0,16 | 0,12 |
+| ECG-FM rastgele t1–t5 | −0,27 … −0,09 | 0,52–0,79 | | | | | |
+
+**Ölçütler (ECG-FM):** r > 0 ve p < 0,05 ✘ · plasebo anlamsız ✔ · r > 5 rastgele kolun hepsi ✔ → **sağlanmadı.**
+Yön aynı (ön eğitimli > rastgele) ama etki anlamlı değil. LightGBM de anlamlı değil (r = 0,30, p = 0,30;
+keşif notu: Δ 200 ve 100 kontrolden büyük ama doz sırasında değil).
+
+**Genel okuma:** Zamandan arındırılmış ön kayıtlı testte anlamlı sonucu yalnızca HuBERT-ECG veriyor (p = 0,044);
+ikinci EKG modeli (ECG-FM) aynı yönde ama anlamsız. → Bulgu modele özgü ve sınırda; genel "EKG ön eğitimi
+su stresini yakalar" iddiası için yeterli değil. Makalede bu şekilde, iki model birlikte raporlanmalı.
