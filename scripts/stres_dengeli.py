@@ -46,14 +46,20 @@ def ekg_sonda():
                                                               random_state=SEED))
 
 
-def deltalar(F, son, bitki, kontrol_cihazlari, model_fn=model) -> pd.DataFrame:
+def skorlar(F, son, bitki, kontrol_cihazlari, model_fn=model) -> np.ndarray:
+    """Cihaz-dışarıda-bırak stres skorları (her pencere, kendi cihazı eğitimde yokken)."""
     cih = cihaz(bitki)
-    sulama = ~np.isin(cih, kontrol_cihazlari)
-    y = (sulama & (son == 1)).astype(int)
+    y = (~np.isin(cih, kontrol_cihazlari) & (son == 1)).astype(int)
     skor = np.empty(len(y))
     for c in np.unique(cih):
         tr, te = cih != c, cih == c
         skor[te] = model_fn().fit(F[tr], y[tr]).predict_proba(F[te])[:, 1]
+    return skor
+
+
+def deltalar(F, son, bitki, kontrol_cihazlari, model_fn=model) -> pd.DataFrame:
+    sulama = ~np.isin(cihaz(bitki), kontrol_cihazlari)
+    skor = skorlar(F, son, bitki, kontrol_cihazlari, model_fn)
     satir = []
     for b in np.unique(bitki):
         m = bitki == b

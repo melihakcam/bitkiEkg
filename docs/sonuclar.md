@@ -316,3 +316,108 @@ olası en küçük p değerine ulaşıyor; aynı mimarinin 5 rastgele başlangı
 → Zamandan bağımsız stres bilgisini çıkaran şey EKG ön eğitimi.
 Sınırlar: test, grup eşlemesi bulunduktan sonra tasarlandı (keşif); etkiyi esas olarak 100 mL grubu taşıyor
 (200 mL ≈ kontrol). Doğrulama için önceden kayıtlı testler: docs/on_kayit.md.
+
+## 12. Tedavi öncesi (plasebo) kontrolü (2026-10-07)
+
+`python scripts/on_tedavi_kontrolu.py` (~1,5 dk) → `results/tables/on_tedavi_{bitki,ozet,ham}.csv`.
+04–06.06'da tüm bitkiler aynı suyu (400 mL) alıyordu. §11'deki modelin aynısı; Δ = 06.06 − 04.06 skoru.
+
+| Δ (EKG donmuş, 6 sa) | kontrol | 200 mL | 100 mL | aşırı | r (doz sırası) | p (90 atama) |
+|---|---|---|---|---|---|---|
+| Plasebo (06.06 − 04.06) | −0,02 | 0,14 | 0,05 | 0,17 | 0,21 | 0,32 |
+| Uç günler (21.06 − 04.06) | 0,29 | 0,38 | 0,61 | 0,70 | 0,47 | 0,067 |
+
+Ham sinyal, tedavi öncesi ortalama potansiyel kayması |06.06 − 04.06| (mV): kontrol 5,8 · 200 mL 26,5 ·
+100 mL 69,3 · aşırı 20,0; oynaklık (std) kontrol 4,2 → 100 mL 11,5.
+
+**Sonuç:** Model düzeyinde tedavi öncesi doz-etki yok (r = 0,21, ns) → §11 bulgusu tedaviden sonra beliriyor.
+Ancak ham sinyalde 100 mL cihazları tedaviden önce de belirgin biçimde daha çok kayıyor ve oynuyor:
+cihaz/bitki farkı ile stres ayrılamıyor (grup başına 2 cihaz). Tek günlük uçlarda etki zayıflıyor (p = 0,067).
+→ Doz-etki "destekleyici ipucu" düzeyinde kalır; ana iddia olamaz.
+
+## 13. Zamioculcas uyaran verisi: cihaz karıştırıcısı (2026-10-08)
+
+`python scripts/uyaran_cihaz_kontrol.py` (veri: Zenodo 7126105 SupplementaryCode, zaten indirilmişti).
+Sıcak sınıfı yalnızca lrpi0, rüzgâr sınıfı yalnızca lrpi1 cihazında kaydedilmiş (dosya adlarından).
+Yazarların rastgele %70/%30 bölmesi; 6 basit öznitelik + RF. "Önce" = uyaran verilmeden önceki 340 örnek.
+
+| Sınıflar | Uyaran ÖNCESİ doğruluk | Uyaran SONRASI | Çoğunluk |
+|---|---|---|---|
+| Rüzgâr / sıcak (farklı cihazlar) | **0,93** | 0,90 | 0,52 |
+| Rüzgâr / uyaran yok | 0,68 | 0,88 | 0,50 |
+| Sıcak / uyaran yok | 0,67 | 0,92 | 0,52 |
+| 5 sınıf | 0,54 | 0,78 | 0,29 |
+
+**Sonuç:** Rüzgâr–sıcak ayrımı, uyaran verilmeden önce bile %93 → model uyaranı değil cihazı tanıyor.
+Uyaran/uyaran yok ayrımında gerçek tepki de var (önce 0,67 → sonra 0,88–0,92) ama önce-değeri de şansın
+üstünde (cihaz/oturum izi). Yayımlanmış %89–100 sonuçlar bu karıştırıcıyı içeriyor.
+
+## 14. Domates külleme verisi (Matić vd. 2025): bitki düzeyi test (2026-10-08)
+
+`python scripts/kulleme_kontrol.py` → `results/tables/kulleme_bitki_gunluk.csv`.
+Veri: Mendeley 10.17632/yr8zhsc6mh.1 (50 MB). 3 deney (A, B, C), her biri ~11 gün; deney başına 11–12 bitki
+(5–6 sağlıklı, 6 hastalıklı; su ve turba ortamı karışık), ~226 s aralık, bitki başına 2 elektrot hattı.
+Bitki başına günlük ortalama potansiyel; Mann–Whitney (bitki = birim) ve bitki-dışarıda-bırak AUC.
+
+- Hiçbir deneyde hiçbir günde sağlıklı–hastalıklı farkı anlamlı değil (tüm p ≥ 0,24).
+- Bitki-dışarıda-bırak AUC 0,00–0,77 arasında rastgele dalgalanıyor; şansın üstünde tutarlı değil.
+- Fark yönü deneyler arasında tersine dönüyor (A: hastalıklı daha yüksek; C: hastalıklı daha düşük).
+
+**Sonuç:** Bitki birim alınınca makaledeki "hastalıklı bitkiler daha düşük potansiyel, %97,5 ayrım,
+belirtiden 3,2 gün önce tespit" iddiası görülmüyor. Muhtemel neden: zaman noktalarının bağımsız örnek
+sayılması (sözde tekrar). Sınır: yalnızca günlük ortalama/oynaklık/eğim kullanıldı; yazarların tam
+yöntemi henüz makaleden kontrol edilmedi.
+
+### 14a. Yazarların kendi Excel dosyalarında doğrulananlar (2026-10-08)
+
+Kaynak: `ExcelProcessedData/MisureElettriche_Prove(ABC)_STAT_MalBianco.xlsx` formülleri (openpyxl ile okundu).
+Data in Brief metni: Europe PMC PMC12557507 (deney başına 12 bitki: her ortamda 3 inokule + 3 sağlıklı;
+kayıt inokulasyonla başlıyor, öncesi yok; "15 dpi" kayıt; analiz XLStat ile, anahtar kelime PLS-D).
+
+1. **İstatistik testi zaman noktalarını örnek sayıyor.** "Prova(A) AVGs" sayfasında grup ortalaması eğrileri
+   (ör. AVG I-S ve AVG H-S, her biri 2–3 bitkinin ortalaması) eşleştirilmiş t-testiyle karşılaştırılmış:
+   Observations = 4192, df = 4191, t = −276,9, p = 0. Gerçek bağımsız birim bitkidir (grup başına 2–3).
+   → Sözde tekrar (pseudoreplication), formülden doğrulandı.
+2. **"ABC averages" sayfasının son ~4,4 günü ölçüm değil.** 2–4140. satırlar sayı (≈ 0–10,8. gün);
+   4141–5807. satırlar (1667 satır, ≈ 10,8–15,2. gün) formül:
+   `=OFFSET(önceki veriyi geriye yansıt) + RANDBETWEEN(...)`; sağlıklı-turba sütununa ek olarak `+30*(t−11)`
+   doğrusal eğilim ekleniyor. Bu sayfanın makaledeki şekil/analizde kullanılıp kullanılmadığı **bilinmiyor**
+   (makale metni henüz okunamadı; sitesi otomatik indirmeyi engelliyor).
+3. **Etiketli deneyler (A, B, C) 11,4 gün sürüyor**, 15 değil. Klasördeki 789 ham CSV Nisan–Haziran 2024
+   tarihli, 20 kanallı ve etiketsiz; Excel'deki Ekim–Kasım 2024 deneyleriyle (28 hat) değerleri eşleşmiyor →
+   bunlar başka (muhtemelen ön) deneyler; hangi bitkiye ait oldukları bilinmiyor.
+
+**Değerlendirme:** (1) adil ve yayımlanabilir bir yöntem eleştirisi. (2) ciddi bir veri bütünlüğü sorusu;
+suçlama olarak yazılmaz — önce makale okunmalı, gerekirse yazarlara sorulmalı.
+
+## 15. 18 günlük ayrışma testi — ön kayıtlı (2026-10-08)
+
+Ön kayıt: `docs/on_kayit.md` (commit a8299fb, gömmeler çıkarılmadan önce GitHub'a gönderildi).
+Gömmeler: `notebooks/07_colab_18gun.ipynb` (T4) → `data/processed/gomme_<kol>_18gun.npz`.
+Tutarlılık: 368 ortak pencerede yeni EKG gömmeleri Aşama 1 gömmeleriyle aynı (en büyük fark 2,4e-7).
+Analiz: `python scripts/ayrisma_testi.py` → `results/tables/ayrisma_{ozet,bitki,gunluk}_<kol>.csv`.
+Eğitim yalnızca P1 (14–21.06) günlerinde susuz (200+100 mL) vs kontrol; cihaz-dışarıda-bırak;
+Δ = skor(P1) − skor(P0 = 04–08.06); doz sırası ile Spearman r; 90 cihaz atanışı, her birinde yeniden eğitim.
+
+| Kol | Ana r | Ana p | Plasebo r | Plasebo p | Δ kontrol | Δ 200 | Δ 100 |
+|---|---|---|---|---|---|---|---|
+| **EKG (ön eğitimli)** | **0,62** | **0,044** | −0,12 | 0,58 | −0,11 | 0,00 | **0,15** |
+| Rastgele t1 | 0,09 | 0,39 | 0,68 | **0,011** | −0,02 | −0,06 | 0,06 |
+| Rastgele t2 | −0,24 | 0,70 | 0,68 | **0,022** | 0,01 | 0,00 | −0,05 |
+| Rastgele t3 | 0,27 | 0,16 | 0,03 | 0,44 | −0,05 | −0,02 | 0,01 |
+| Rastgele t4 | −0,06 | 0,54 | 0,53 | **0,044** | −0,08 | −0,03 | −0,10 |
+| Rastgele t5 | −0,44 | 0,88 | 0,44 | 0,14 | −0,03 | −0,03 | −0,11 |
+| tsfresh + LightGBM | (çalışıyor) | | | | | | |
+
+**Ön kayıtlı ölçütler (EKG):** r > 0 ve p < 0,05 ✔ · plasebo anlamsız ✔ · r > 5 rastgele kolun hepsi ✔ → **sağlandı.**
+
+Günlük eğri (EKG, 100 mL − kontrol ortalama skor): 04–12.06 arası −0,28…+0,10 (ortalama ≈ −0,08);
+13.06'dan sonra +0,04…+0,33 (19–21.06: 0,33, 0,33, 0,21). 200 mL ≈ kontrol.
+
+**Dikkat edilmesi gerekenler (dürüst okuma):**
+- Etki esas olarak 100 mL grubundan (2 cihaz); 200 mL kontrolden ayrışmıyor. p = 0,044 = 4/90 → sınırda.
+- **Rastgele kolların 3/5'inde plasebo anlamlı** (tedavi öncesinde de doz sırası görülüyor): 100 mL cihazlarının
+  tedavi öncesi kayması (§12, ham sinyalde 69 mV) rastgele özniteliklerde yakalanıyor. EKG gömmelerinde bu
+  plasebo etkisi yok, sonra-dönem etkisi var. Yorum: EKG temsili cihaz kaymasına daha az duyarlı ve tedaviden
+  sonra beliren farkı yakalıyor — ama cihaza özgü, zamanla artan bir kayma bu testle tamamen dışlanamaz.
+- Veri §11 ile örtüşüyor (aynı bitkiler, aynı gömme modeli); bağımsız tekrar değil, daha sıkı bir tasarım.
