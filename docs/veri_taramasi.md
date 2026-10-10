@@ -169,3 +169,21 @@ Aşağıdaki adımlar **karar değildir, öneridir**. Proje kuralı gereği her 
 Asıl sonuç şudur: alanda paralel kontrollü açık veri neredeyse yok. Bu bir eksik değil, makalenin bir bulgusu olabilir. "Sızıntı ve zaman tuzağı yaygın, ama test etmek için gereken veri tasarımı da nadir" demek mümkün. Literatür sayıları (57 çalışmadan 4'ünde tam bağımsız test) bunu destekliyor. Bizim domates verimiz, Matić ile birlikte, bu nadir tasarımın iki örneğinden biri olur.
 
 İkinci sonuç bir uyarıdır. En uygun bağımsız veriler (Matić ~200 s, Vitis 1 Hz) çok yavaş örneklenmiş. Bu yüzden zaman tuzağı testine uygunlar. Ama insan EKG temel modellerinin aktarımını test etmeye uymayabilirler. Bu bir çıkarımdır; veriye bakılmadan kesinleşmez. Yani bağımsız tekrar büyük olasılıkla makalenin **zaman tuzağı** kısmını güçlendirir, **EKG aktarımı** kısmını değil. Yüksek hızlı ve paralel kontrollü veri (Vivent, 500 Hz) ancak istek üzerine alınabilir.
+
+## Karşılaştırma çalışması için tasarım kontrolü (2026-10-10)
+
+Kurallar: (1) yeterli bağımsız birim, (2) stres ile kontrol aynı zamanda, (3) grup ile cihaz/oturum çakışmıyor,
+(4) etiket sinyalden bağımsız, (5) açık lisans. Yalnızca açıklama, makale yöntemi, dosya listesi ve sütun
+başlıklarına bakıldı; sinyal değerlerine bakılmadı (ön kayıt temiz kalsın diye).
+
+| Veri | Karar | Gerekçe |
+|---|---|---|
+| Asma (Zenodo 16270285) | ❌ | 8 asma + 1 kütük; sağlık etiketi bitkiyle birebir (agronom gözlemi). Makalede sinyalden sağlık sınıflaması yok, ML yalnızca hava tahmini. Sinyal ~242 sa (bir yıl olan hava verisi). |
+| Marul (Zenodo 19386720) | ❌ | Elektrofizyoloji değil: sütunlar `Time, Plant_ID, Group, K_Ratio, pH_Value, H2O2_Conc` (elektrokimyasal derişim). Asit stresini pH ile ölçmek döngüsel. |
+| Madariaga (figshare 24161100, 82,6 MB) | 🟡 | Plant SpikerBox, 10 kHz, .wav; 16 tür, 89 bitki, 398 kayıt; uyaran başı/sonu elle işaretli (.txt). Alev/dokunma görevi geçersiz (dokunma yalnızca sinekkapan ve küstüm otunda → tür ile çakışık). Kullanılabilir görev: aynı kayıtta uyaran öncesi/sonrası. Risk: elle işaretleme ve uyaran sırasında hareket izi; "tepki var" etiketi eşikten türetilmiş (kullanılmamalı). |
+| Sarmaşık ısı/ozon (Zenodo 15696845, 15,7 GB) | ❌ | Isı günde 5 kez **sabit saatlerde** (08:00–20:30) → uyaran günün saatiyle çakışık; kontrol bitkisi tanımlı değil; uyaran zamanlarının dosyada işaretli olduğu belirtilmemiş; Buss/Hamann laboratuvarı (bağımsız değil). |
+| HIPB-MM (HF JM1122/HIPB-MM) | 🟡 | *Arabidopsis*, tek cihaz (Keithley 2401), 16 s parçalar. Sınıflar (parça sayısından eşlendi): M = *H. armigera* (17 kayıt), T = *S. exigua* (21 kayıt), X = *P. xylostella* (4 kayıt, 18–20.05), N = böceksiz (11 kayıt, **tek gün** 25.05). N ve X tarihle çakışık → kullanılmaz. **M ile T aynı günlerde (13–17.05)** kaydedilmiş → kayıt-dışarıda-bırak ile M/T görevi kullanılabilir. Risk: parçalar "sinyalde belirgin dalgalanma" şartıyla seçilmiş (iki sınıfa eşit uygulanıyor). |
+| Külleme, Matić (Mendeley yr8zhsc6mh) | 🟡 keşif | 3 deney × 12 bitki (6 aşılı + 6 sağlıklı), aynı anda, tek kaydedici; etiket aşılamadan. Daha önce incelendi (sonuclar §14) → ön kayıtlı sayılamaz, keşif olarak raporlanır. Yalnızca ham deney sayfaları kullanılmalı ("ABC averages" değil). ~226 s aralık. |
+
+**Sonuç (2026-10-10):** Uygun ya da koşullu uygun veri 3 ayrı laboratuvardan: Buss (domates, vaka), Madariaga (uyaran öncesi/sonrası),
+HIPB-MM (M/T); Matić keşif olarak eklenebilir. "En az 3 laboratuvar" koşulu sağlandı, ama hepsi koşullu. Sıradaki adım: ön kayıt.
